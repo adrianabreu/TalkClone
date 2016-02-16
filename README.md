@@ -6,8 +6,17 @@ Aunque en tecnología ningún tiempo pasado fue mejor, nosotros vamos a volver t
 
 ## Tareas
 
- 1. Acepta la [tarea asignada de GitHub Classroom](https://en.wikipedia.org/wiki/Talk_%28software%29). Así obtendrás tu propio repositorio como una copia de este.
- 2. Trabaja en el repositorio para desarrollar la primera parte de tu programa de mensajería instantánea, tal y como se describe en [el guión](https://docs.google.com/document/d/1y9fXi8-JhAhrwSKZ7_LBuUF0eOW5ehjPE79yLxQM0zQ).
- 3. Usar branking
- 4. README en markdown.
- 4. Issue
+ 1. Acepta la [tarea asignada de GitHub Classroom](2. Incorporar el parche a master). Así obtendrás tu propio repositorio como una copia de este. A este repositorio lo llamaremos `upstream`.
+ 2. Haz un [fork](https://guides.github.com/activities/forking/) de `upstream`. A nuevo repositorio lo llamaremos `origin`.
+ 3. [Clona](http://gitref.org/creating/#clone) `origin` en tu ordenador.
+ 4. Trabaja en tu copia local para desarrollar tu programa de mensajería instantánea, siguiendo los pasos indicados en [el guión](https://docs.google.com/document/d/1y9fXi8-JhAhrwSKZ7_LBuUF0eOW5ehjPE79yLxQM0zQ).
+ 5. Modifica README.md usando [Markdown](https://guides.github.com/features/mastering-markdown/) para:
+   1. Explicar cómo compilar y probar la aplicación, incluyendo los requisitos requeridos para hacerlo.
+   3. Comentar las características implementadas.
+ 5. [Sube](http://gitref.org/remotes/#push) los cambios al repositorio `origin` en GitHub.
+ 6. Crea un [pull request](https://help.github.com/articles/creating-a-pull-request) de `origin` a `upstream` para entregar la práctica.
+
+## Consideraciones adicionales sobre el desarrollo 
+ 1. Usa [Git Branching](https://docs.google.com/presentation/d/1EXEiEz1d__aHQvAYcPFOiwzlRMunIsDUlJ4tMMYaFig/edit?usp=sharing) para organizar el desarrollo.
+ 2. Usa el sistema de [issues](https://guides.github.com/features/issues/) de GitHub para controlar las tareas a realizar.
+ 3. Opcionalmente, implementa las comunicaciones utilizando sockets tipo SOCK\_STREAM (TCP/IP) en lugar de SOCK\_DGRAM (UDP/IP). Se valorará con puntos adicionales.
