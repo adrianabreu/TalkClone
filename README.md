@@ -6,7 +6,7 @@ Aunque en tecnología ningún tiempo pasado fue mejor, nosotros vamos a volver t
 
 ## Tareas
 
- 1. Acepta la [tarea asignada de GitHub Classroom](2. Incorporar el parche a master). Así obtendrás tu propio repositorio como una copia de este. A este repositorio lo llamaremos `upstream`.
+ 1. Acepta la [tarea asignada de GitHub Classroom](https://classroom.github.com/assignment-invitations/9b25d9fc368e2d527099736248cff737). Así obtendrás tu propio repositorio como una copia de este. A este repositorio lo llamaremos `upstream`.
  2. Haz un [fork](https://guides.github.com/activities/forking/) de `upstream`. A nuevo repositorio lo llamaremos `origin`.
  3. [Clona](http://gitref.org/creating/#clone) `origin` en tu ordenador.
  4. Trabaja en tu copia local para desarrollar tu programa de mensajería instantánea, siguiendo los pasos indicados en [el guión](https://docs.google.com/document/d/1y9fXi8-JhAhrwSKZ7_LBuUF0eOW5ehjPE79yLxQM0zQ).
