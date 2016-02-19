@@ -7,6 +7,8 @@
 #include <cerrno>
 #include <cstring>
 
+#define LOCALPORT 5500
+#define REMOTEPORT 6000
 
 // Estructura de los mensajes
 struct Message {
@@ -33,7 +35,7 @@ int main(void){
     sockaddr_in sin_local{};    // Porque se recomienda inicializar a 0
     sin_local.sin_family = AF_INET;
     sin_local.sin_addr.s_addr = htonl(INADDR_ANY);
-    sin_local.sin_port = htons(6000);
+    sin_local.sin_port = htons(LOCALPORT);
 
     //Asignar la dirección con bind
     int result = bind(fd, reinterpret_cast<const sockaddr*>(&sin_local),
@@ -46,7 +48,7 @@ int main(void){
     //Preparar socket remoto
     sockaddr_in sin_remote{}; // Porque se recomienda inicializar a 0
     sin_remote.sin_family = AF_INET;
-    sin_remote.sin_port = htons(5500);
+    sin_remote.sin_port = htons(REMOTEPORT);
     sin_remote.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     socklen_t src_len = sizeof(sin_remote);
     //inet_aton("1", &remote_address.sin_addr);
