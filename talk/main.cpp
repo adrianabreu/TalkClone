@@ -4,11 +4,12 @@
 
 #include <iostream>
 
+#include <cstdio>
 #include <cerrno>
 #include <cstring>
 
-#define LOCALPORT 5500
-#define REMOTEPORT 6000
+#define LOCALPORT 6000
+#define REMOTEPORT 5500
 
 // Estructura de los mensajes
 struct Message {
@@ -40,7 +41,7 @@ int main(void){
     //Asignar la dirección con bind
     int result = bind(fd, reinterpret_cast<const sockaddr*>(&sin_local),
         sizeof(sin_local));
-    if (result < 0) {
+    if ( result < 0 ) {
         std::cerr << "falló bind: " << std::strerror(errno) << std::endl;
         return 5;    // Error. Termina el programa siempre con un valor > 0
     }
@@ -60,7 +61,7 @@ int main(void){
     while(1){
 
         std::getline(std::cin,message_text);
-        if(message_text == "/quit" )
+        if ( message_text == "/quit" || std::cin.eof() )
             break;
 
 
