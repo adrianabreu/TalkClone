@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cerrno>
 #include <cstring>
+#include <system_error>
 
 // Estructura de los mensajes
 struct Message {

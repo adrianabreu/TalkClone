@@ -22,7 +22,20 @@ int main(void){
     sockaddr_in sin_local{};    // Porque se recomienda inicializar a 0
     sin_local = make_ip_address("0.0.0.0",LOCALPORT);
 
-    Socket socket(sin_local);
+    Socket* socket;
+
+    try {
+
+        socket = new Socket(sin_local);
+
+    } catch (std::system_error& e) {
+
+        std::cerr << program_invocation_name << ": " << e.what()
+        << std::endl;
+
+        return 3;    // Error. Termina el programa siempre con un valor > 0
+    }
+
 
 
     //Preparar socket remoto
@@ -37,15 +50,35 @@ int main(void){
     while(1){
 
         std::getline(std::cin,message_text);
+
         if ( message_text == "/quit" || std::cin.eof() )
             break;
 
         memset (message.text,0,sizeof(message.text));
         message_text.copy(message.text, sizeof(message.text) - 1, 0);
 
-        socket.send_to(message, sin_remote);
+        try {
 
-        socket.receive_from(message, sin_remote);
+            socket->send_to(message, sin_remote);
+
+        } catch (std::system_error& e) {
+
+            std::cerr << program_invocation_name << ": " << e.what()
+            << std::endl;
+
+            return 6;    // Error. Termina el programa siempre con un valor > 0
+
+        }
+
+        try {
+
+            socket->receive_from(message, sin_remote);
+
+        } catch (std::system_error& e) {
+
+            std::cerr << program_invocation_name << ": " << e.what()
+            << std::endl;
+        }
 
         // Mostrar el mensaje recibido en la terminal
         char* remote_ip = inet_ntoa(sin_remote.sin_addr);
