@@ -1,61 +1,37 @@
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
-#include <iostream>
-
-#include <cstdio>
-#include <cerrno>
-#include <cstring>
+#include "socket.h"
 
 #define LOCALPORT 6000
 #define REMOTEPORT 5500
 
-// Estructura de los mensajes
-struct Message {
 
-    //...                    // Otros campos del mensaje
 
-    char text[1024];
+sockaddr_in make_ip_address(const std::string& ip_address, int port){
+    sockaddr_in tmp;
 
-    //...                    // Otros campos del mensaje
+    tmp.sin_family = AF_INET;
+    const char * c = ip_address.c_str();
+    inet_aton(c,&tmp.sin_addr);
+    tmp.sin_port = htons(port);
 
-};
+    return tmp;
+}
 
 int main(void){
 
-    // Crear el socket local
-    int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-        std::cerr << "no se pudo crear el socket: " <<
-        std::strerror(errno) << std::endl;
-        return 3;    // Error. Termina el programa siempre con un valor > 0
-    }
-
     //Preparar estructura local
     sockaddr_in sin_local{};    // Porque se recomienda inicializar a 0
-    sin_local.sin_family = AF_INET;
-    sin_local.sin_addr.s_addr = htonl(INADDR_ANY);
-    sin_local.sin_port = htons(LOCALPORT);
+    sin_local = make_ip_address("0.0.0.0",LOCALPORT);
 
-    //Asignar la dirección con bind
-    int result = bind(fd, reinterpret_cast<const sockaddr*>(&sin_local),
-        sizeof(sin_local));
-    if ( result < 0 ) {
-        std::cerr << "falló bind: " << std::strerror(errno) << std::endl;
-        return 5;    // Error. Termina el programa siempre con un valor > 0
-    }
+    Socket socket(sin_local);
+
 
     //Preparar socket remoto
     sockaddr_in sin_remote{}; // Porque se recomienda inicializar a 0
-    sin_remote.sin_family = AF_INET;
-    sin_remote.sin_port = htons(REMOTEPORT);
-    sin_remote.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    socklen_t src_len = sizeof(sin_remote);
+    sin_remote = make_ip_address("0.0.0.0",REMOTEPORT);
+
     //inet_aton("1", &remote_address.sin_addr);
 
     //Lectura
-    // Enviar un mensaje "¡Hola, mundo!" al socket remoto
     Message message;
     std::string message_text("¡Hola, mundo!");
     while(1){
@@ -64,27 +40,18 @@ int main(void){
         if ( message_text == "/quit" || std::cin.eof() )
             break;
 
-
         memset (message.text,0,sizeof(message.text));
         message_text.copy(message.text, sizeof(message.text) - 1, 0);
 
+        socket.send_to(message, sin_remote);
 
-        int result = sendto(fd, &message, sizeof(message), 0,reinterpret_cast<const sockaddr*>(&sin_remote),sizeof(sin_remote));
-        if (result < 0) {
-            std::cerr << "falló sendto: " << std::strerror(errno) << std::endl;
-            return 6;
-        }
-        result = recvfrom(fd, &message, sizeof(message), 0,
-            reinterpret_cast<sockaddr*>(&sin_remote), &src_len);
-        if (result < 0) {
-            std::cerr << "falló recvfrom: " << std::strerror(errno) << std::endl;
-            return 8;
-        }
+        socket.receive_from(message, sin_remote);
 
         // Mostrar el mensaje recibido en la terminal
         char* remote_ip = inet_ntoa(sin_remote.sin_addr);
         int remote_port = ntohs(sin_remote.sin_port);
         message.text[254] = '\0';
+
         std::cout << "El sistema " << remote_ip << ":" << remote_port <<
         " envió el mensaje '" << message.text << "'" << std::endl;
     }
