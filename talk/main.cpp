@@ -37,14 +37,11 @@ int main(void){
     }
 
 
-
     //Preparar socket remoto
     sockaddr_in sin_remote{}; // Porque se recomienda inicializar a 0
     sin_remote = make_ip_address("0.0.0.0",REMOTEPORT);
 
-    //inet_aton("1", &remote_address.sin_addr);
-
-    //Lectura
+    //Estructura de mensaje
     Message message;
     std::string message_text("");
 
