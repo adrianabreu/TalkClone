@@ -25,7 +25,7 @@ Socket::~Socket()
 
 void Socket::send_to(const Message& message, const sockaddr_in& address)
 {
-    int result = sendto(fd_, reinterpret_cast<const void*>(&message), sizeof(message),
+    int result = sendto(fd_, static_cast<const void*>(&message), sizeof(message),
                         0,reinterpret_cast<const sockaddr*>(&address),sizeof(address));
 
 
@@ -37,7 +37,7 @@ void Socket::receive_from(Message& message, sockaddr_in& address)
 {
     socklen_t src_len = sizeof(address);
 
-    int result = recvfrom(fd_,reinterpret_cast<void*>(&message), sizeof(message), 0,
+    int result = recvfrom(fd_,static_cast<void*>(&message), sizeof(message), 0,
         reinterpret_cast<sockaddr*>(&address), &src_len);
 
     if (result < 0)
