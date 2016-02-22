@@ -1,7 +1,7 @@
 #include "socket.h"
 
-#define LOCALPORT 6000
-#define REMOTEPORT 5500
+#define LOCALPORT 5500
+#define REMOTEPORT 6000
 
 
 
@@ -46,7 +46,8 @@ int main(void){
 
     //Lectura
     Message message;
-    std::string message_text("¡Hola, mundo!");
+    std::string message_text("");
+
     while(1){
 
         std::getline(std::cin,message_text);
