@@ -23,17 +23,18 @@ Socket::~Socket()
     close(fd_);
 }
 
-void Socket::send_to(const Message& message, const sockaddr_in& address)
+void Socket::sendTo(const Message& message, const sockaddr_in& address)
 {
     int result = sendto(fd_, static_cast<const void*>(&message), sizeof(message),
                         0,reinterpret_cast<const sockaddr*>(&address),sizeof(address));
 
-
+    //SIGPIPE error can be avoided ignoring this
+    //Normally sigpipe is ignored
     if ( result < 0 )
         throw std::system_error(errno, std::system_category(), "falló sendto: ");
 }
 
-void Socket::receive_from(Message& message, sockaddr_in& address)
+void Socket::receiveFrom(Message& message, sockaddr_in& address)
 {
     socklen_t src_len = sizeof(address);
 

@@ -16,11 +16,7 @@
 // Estructura de los mensajes
 struct Message {
 
-    //...                    // Otros campos del mensaje
-
     char text[1024];
-
-    //...                    // Otros campos del mensaje
 
 };
 
@@ -32,8 +28,8 @@ private:
 public:
     Socket(const sockaddr_in& address);
     ~Socket();
-    void send_to(const Message& message, const sockaddr_in& address);
-    void receive_from(Message& message, sockaddr_in& address);
+    void sendTo(const Message& message, const sockaddr_in& address);
+    void receiveFrom(Message& message, sockaddr_in& address);
 };
 
 #endif // SOCKET_H

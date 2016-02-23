@@ -1,12 +1,12 @@
 #include "socket.h"
 
-#define LOCALPORT 5500
-#define REMOTEPORT 6000
+#define LOCALPORT 6000
+#define REMOTEPORT 5500
 
 
 
 sockaddr_in make_ip_address(const std::string& ip_address, int port){
-    sockaddr_in tmp;
+    sockaddr_in tmp{};
 
     tmp.sin_family = AF_INET;
     const char * c = ip_address.c_str();
@@ -19,7 +19,7 @@ sockaddr_in make_ip_address(const std::string& ip_address, int port){
 int main(void){
 
     //Preparar estructura local
-    sockaddr_in sin_local{};    // Porque se recomienda inicializar a 0
+    sockaddr_in sin_local;
     sin_local = make_ip_address("0.0.0.0",LOCALPORT);
 
     Socket* socket;
@@ -38,26 +38,24 @@ int main(void){
 
 
     //Preparar socket remoto
-    sockaddr_in sin_remote{}; // Porque se recomienda inicializar a 0
+    sockaddr_in sin_remote;
     sin_remote = make_ip_address("0.0.0.0",REMOTEPORT);
 
     //Estructura de mensaje
     Message message;
     std::string message_text("");
 
-    while(1){
+    std::getline(std::cin,message_text);
 
-        std::getline(std::cin,message_text);
+    while(message_text != "/quit" && !std::cin.eof()){
 
-        if ( message_text == "/quit" || std::cin.eof() )
-            break;
-
-        memset (message.text,0,sizeof(message.text));
+        //Limpiamos el mensaje previo para evitar caracteres extraños
         message_text.copy(message.text, sizeof(message.text) - 1, 0);
+        message.text[message_text.length()] = '\0';
 
         try {
 
-            socket->send_to(message, sin_remote);
+            socket->sendTo(message, sin_remote);
 
         } catch (std::system_error& e) {
 
@@ -70,7 +68,7 @@ int main(void){
 
         try {
 
-            socket->receive_from(message, sin_remote);
+            socket->receiveFrom(message, sin_remote);
 
         } catch (std::system_error& e) {
 
@@ -81,10 +79,19 @@ int main(void){
         // Mostrar el mensaje recibido en la terminal
         char* remote_ip = inet_ntoa(sin_remote.sin_addr);
         int remote_port = ntohs(sin_remote.sin_port);
-        message.text[254] = '\0';
+
+        /* Para aumentar la seguridad de la aplicacion,
+         * añadimos un fin de cadena que limite la lectura
+         * al tamaño del buffer, por si el mensaje no está
+         * delimitado de por sí
+         */
+        message.text[1023] = '\0';
 
         std::cout << "El sistema " << remote_ip << ":" << remote_port <<
         " envió el mensaje '" << message.text << "'" << std::endl;
+
+        std::getline(std::cin, message_text);
+
     }
     return 0;
 }
