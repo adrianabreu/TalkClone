@@ -22,16 +22,26 @@ int main(void){
     sockaddr_in sin_local;
     sin_local = make_ip_address("0.0.0.0",LOCALPORT);
 
-    Socket* socket;
+    Socket socket;
 
     try {
 
-        socket = new Socket(sin_local);
+       Socket socket(sin_local);
 
     } catch (std::system_error& e) {
 
-        std::cerr << program_invocation_name << ": " << e.what()
-        << std::endl;
+        if (e.code() == ENOBUFS || e.code() == ENOMEM) {
+
+            std::cerr << program_invocation_name << ": Not enough memory for creating Socket "
+            << std::endl;
+
+        } else {
+
+            std::cerr << program_invocation_name << ": " << e.what()
+            << std::endl;
+
+        }
+
 
         return 3;    // Error. Termina el programa siempre con un valor > 0
     }
@@ -60,10 +70,7 @@ int main(void){
         } catch (std::system_error& e) {
 
             std::cerr << program_invocation_name << ": " << e.what()
-            << std::endl;
-
-            return 6;    // Error. Termina el programa siempre con un valor > 0
-
+                      << std::endl;
         }
 
         try {
