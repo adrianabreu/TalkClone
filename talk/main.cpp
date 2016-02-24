@@ -1,7 +1,7 @@
 #include "socket.h"
 
-#define LOCALPORT 6000
-#define REMOTEPORT 5500
+#define LOCALPORT 5500
+#define REMOTEPORT 6000
 
 
 
@@ -22,15 +22,22 @@ int main(void){
     sockaddr_in sin_local;
     sin_local = make_ip_address("0.0.0.0",LOCALPORT);
 
-    Socket socket;
+    Socket* socket;
 
     try {
 
-       Socket socket(sin_local);
+        socket = new Socket(sin_local);
 
-    } catch (std::system_error& e) {
+    } catch (std::bad_alloc& ba){
 
-        if (e.code() == ENOBUFS || e.code() == ENOMEM) {
+        std::cerr << program_invocation_name << ": error creating socket " << ba.what()
+        << std::endl;
+
+        return 3;
+
+    }catch (std::system_error& e) {
+
+        if (errno == ENOBUFS || errno == ENOMEM) {
 
             std::cerr << program_invocation_name << ": Not enough memory for creating Socket "
             << std::endl;
