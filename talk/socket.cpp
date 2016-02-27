@@ -1,5 +1,14 @@
 #include "socket.h"
 
+Socket::Socket()
+{
+    /*
+     * We have to start the file descriptor to a non
+     * valid value
+     */
+    fd_ = -1;
+}
+
 Socket::Socket(const sockaddr_in& address)
 {
     // Crear el socket local
@@ -18,10 +27,25 @@ Socket::Socket(const sockaddr_in& address)
 
 }
 
+Socket::Socket(Socket &older)
+{
+    fd_= older.getFd();
+}
+
 Socket::~Socket()
 {
     //Finalizamos el descriptor del fichero para terminar la conexion
     close(fd_);
+}
+
+int Socket::getFd()
+{
+    return fd_;
+}
+
+void Socket::setFd(int newFd)
+{
+    fd_ = newFd;
 }
 
 void Socket::sendTo(const Message& message, const sockaddr_in& address)
@@ -42,4 +66,12 @@ void Socket::receiveFrom(Message& message, sockaddr_in& address)
 
     if (result < 0)
         throw std::system_error(errno, std::system_category(), "falló recvfrom: ");
+}
+
+Socket& Socket::operator =(Socket&& older)
+{
+    fd_=older.getFd();
+    older.setFd(-1);
+
+    return *this;
 }
