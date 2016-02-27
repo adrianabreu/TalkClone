@@ -7,8 +7,15 @@
 
    Debido a que se utiliza C++ 11, hay que añadir esta directiva al compilar: **-std=c++11**
    
-   	g++ -std=c++11 main.cpp
+   `g++ -std=c++11 main.cpp`
 
+   Alternativamente si tienes qmake (debe usarse la version de qt5)
+   ```
+   qmake talk.pro
+   make
+   ``` 
+
+   
 ## Prueba básica:
    Este chat esta preparado para probarse en local inicialmente. Para poder hacer las pruebas básicas se han definido dos constantes, **LOCALPORT** y **REMOTEPORT**.
 
@@ -16,18 +23,19 @@
 
    Por ejemplo:
    
-   	Programa 1: LOCALPORT 3000 REMOTEPORT 4000
+      Programa 1: LOCALPORT 3000 REMOTEPORT 4000
 
-   	Programa 2: LOCALPORT 4000 REMOTEPORT 3000
+      Programa 2: LOCALPORT 4000 REMOTEPORT 3000
 
    Ahora podemos compilar ambos programas y probar a comunicarlos entre ellos.
 
 ## Características:
 
-1. El programa utiliza comunicación mediante SOCKETS de Unix.
+1. El programa utiliza comunicación mediante SOCKETS.
 2. La comunicación es vía UDP.
 3. Se mandan estructuras de tipo Message, consistentes por ahora, en cadenas de caracteres.
-	
+   
 ## Modo de uso:
 1. Para mandar un mensaje simplemente escribe en la línea el mensaje a enviar y pulsa enter, recibirás posteriormente el mensaje del otro usuario.
-2. Para salir puedes escribir /quit
+2. Para salir puedes escribir `/quit` o presionar `Ctrl + D`.
+
