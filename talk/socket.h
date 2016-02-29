@@ -20,6 +20,9 @@ struct Message {
 
 };
 
+//Helper function
+sockaddr_in makeIpAddress(const std::string& ip_address, int port);
+
 class Socket
 {
 private:

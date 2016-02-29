@@ -1,5 +1,16 @@
 #include "socket.h"
 
+sockaddr_in makeIpAddress(const std::string& ip_address, int port){
+    sockaddr_in tmp{};
+
+    tmp.sin_family = AF_INET;
+    const char * c = ip_address.c_str();
+    inet_aton(c,&tmp.sin_addr);
+    tmp.sin_port = htons(port);
+
+    return tmp;
+}
+
 Socket::Socket()
 {
     /*
