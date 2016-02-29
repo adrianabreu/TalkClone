@@ -37,7 +37,7 @@ public:
     void setFd(int newFd);
     void sendTo(const Message& message, const sockaddr_in& address);
     void receiveFrom(Message& message, sockaddr_in& address);
-    Socket& operator =(Socket&& older);
+    Socket& operator=(Socket& older);
 };
 
 #endif // SOCKET_H
