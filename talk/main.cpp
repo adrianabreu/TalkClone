@@ -82,7 +82,8 @@ int main(void){
     while(!endOfLoop){
 
         try {
-            getandSendMessage(&local,message,sin_remote,&message_text, &endOfLoop);
+            getandSendMessage(&local,message,sin_remote,&message_text,
+                              &endOfLoop);
             if(!endOfLoop)
                 receiveAndShowMessage(&local,&message,sin_remote);
         } catch (std::system_error& e) {
