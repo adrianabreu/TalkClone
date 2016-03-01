@@ -38,12 +38,6 @@ Socket::Socket(const sockaddr_in& address)
 
 }
 
-Socket::Socket(Socket &older)
-{
-    fd_= older.getFd();
-    older.setFd(-1);
-}
-
 Socket::~Socket()
 {
     //Finalizamos el descriptor del fichero para terminar la conexion
@@ -80,7 +74,7 @@ void Socket::receiveFrom(Message& message, sockaddr_in& address)
         throw std::system_error(errno, std::system_category(), "falló recvfrom: ");
 }
 
-Socket& Socket::operator=(Socket& older)
+Socket& Socket::operator=(Socket&& older)
 {
     fd_=older.getFd();
     older.setFd(-1);

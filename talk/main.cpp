@@ -1,24 +1,26 @@
 #include "socket.h"
 
-#define LOCALPORT 6000
+#define LOCALPORT 5500
 #define REMOTEPORT 5500
 
 #define SUCCESS 0
 #define ERR_SOCKET 3
 
 void getandSendMessage(Socket *local, Message message, sockaddr_in remote,
-                       std::string *message_text)
+                       std::string *message_text, bool *endOfLoop)
 {
     //Limpiamos el mensaje previo para evitar caracteres extraños
     std::getline(std::cin,*message_text);
 
     if(*message_text == "/quit" || std::cin.eof())
-        throw;
+        *endOfLoop = true;
 
-    message_text->copy(message.text, sizeof(message.text) - 1, 0);
-    message.text[message_text->length()] = '\0';
-    local->sendTo(reinterpret_cast<const Message&>(message),
+    if (!*endOfLoop) {
+        message_text->copy(message.text, sizeof(message.text) - 1, 0);
+        message.text[message_text->length()] = '\0';
+        local->sendTo(reinterpret_cast<const Message&>(message),
                  reinterpret_cast<const sockaddr_in&>(remote));
+    }
 
 }
 
@@ -52,8 +54,7 @@ int main(void){
     Socket local;
 
     try {
-         Socket temp(sin_local);
-         local = temp;
+         local = Socket(sin_local);
 
     }catch (std::system_error& e) {
 
@@ -76,15 +77,19 @@ int main(void){
     Message message;
     std::string message_text("");
 
-    while(1){
+    bool endOfLoop = false;
+
+    while(!endOfLoop){
 
         try {
-            getandSendMessage(&local,message,sin_remote,&message_text);
-            receiveAndShowMessage(&local,&message,sin_remote);
+            getandSendMessage(&local,message,sin_remote,&message_text, &endOfLoop);
+            if(!endOfLoop)
+                receiveAndShowMessage(&local,&message,sin_remote);
         } catch (std::system_error& e) {
             std::cerr << program_invocation_name << ": " << e.what()
             << std::endl;
         }
+
     }
 
     return aux;
