@@ -5,9 +5,9 @@
 
 ## Compilación:
 
-   Debido a que se utiliza C++ 11, hay que añadir esta directiva al compilar: **-std=c++11**
+   Debido a que se utiliza tanto C++ 11 como hilos, hay que añadir estas directivas al compilar: **-std=c++11 -pthread**
    
-   `g++ -std=c++11 main.cpp`
+   `g++ -std=c++11 -pthread socket.cpp main.cpp`
 
    Alternativamente si tienes qmake (debe usarse la version de qt5)
    ```
@@ -36,6 +36,7 @@
 3. Se mandan estructuras de tipo Message, consistentes por ahora, en cadenas de caracteres.
    
 ## Modo de uso:
-1. Para mandar un mensaje simplemente escribe en la línea el mensaje a enviar y pulsa enter, recibirás posteriormente el mensaje del otro usuario.
-2. Para salir puedes escribir `/quit` o presionar `Ctrl + D`.
+1. Para mandar un mensaje simplemente escribe en la línea el mensaje a enviar y pulsa enter.
+2. Si otro usuario conectado manda un mensaje, este aparecerá en la pantalla indicando la ip del usuario que lo dijo.
+3. Para salir puedes escribir `/quit` o presionar `Ctrl + D`.
 

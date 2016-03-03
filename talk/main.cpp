@@ -110,9 +110,10 @@ int main(void){
             << std::endl;
         }
 
+        //Wait for end of user input
         while(!endOfLoop);
 
-        //Always wait for finish threads
+        //We must finish both threads gracefully!
         request_cancellation(hilo1);
         request_cancellation(hilo2);
     }
