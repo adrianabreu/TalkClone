@@ -38,5 +38,5 @@
 ## Modo de uso:
 1. Para mandar un mensaje simplemente escribe en la línea el mensaje a enviar y pulsa enter.
 2. Si otro usuario conectado manda un mensaje, este aparecerá en la pantalla indicando la ip del usuario que lo dijo.
-3. Para salir puedes escribir `/quit` o presionar `Ctrl + D`.
+3. Para salir puedes escribir en cualquier momento `/quit` o presionar `Ctrl + D`.
 
