@@ -18,12 +18,39 @@ Socket::Socket()
      * valid value
      */
     fd_ = -1;
+    server_ = false;
 }
 
 Socket::Socket(const sockaddr_in& address)
 {
+    normalSocket(address);
+
+    server_ = true;
+    //We have to listen for a 5 connections
+    int result = listen(fd_, 5);
+
+    if (result < 0)
+        throw std::system_error(errno, std::system_category(),
+                                "no se pudo escuchar");
+
+}
+
+Socket::Socket(const sockaddr_in& address, const sockaddr_in& remote)
+{
+    normalSocket(address);
+    server_ = false;
+    int result = connect(fd_,reinterpret_cast<const sockaddr*>(&remote),
+                         sizeof(remote));
+
+    if (result < 0)
+        throw std::system_error(errno, std::system_category(),
+                                "no se pudo conectar");
+}
+
+void Socket::normalSocket(const sockaddr_in& address)
+{
     // Crear el socket local
-    fd_ = socket(AF_INET, SOCK_DGRAM, 0);
+    fd_ = socket(AF_INET, SOCK_STREAM, 0);
 
     if ( fd_ < 0 )
         throw std::system_error(errno, std::system_category(),
@@ -35,13 +62,17 @@ Socket::Socket(const sockaddr_in& address)
 
     if ( result < 0 )
         throw std::system_error(errno, std::system_category(),"falló bind: ");
-
 }
 
 Socket::~Socket()
 {
     //Finalizamos el descriptor del fichero para terminar la conexion
     close(fd_);
+}
+
+void Socket::handleConnections()
+{
+    fd_ = accept(fd_,nullptr,nullptr);
 }
 
 int Socket::getFd()
@@ -54,30 +85,34 @@ void Socket::setFd(int newFd)
     fd_ = newFd;
 }
 
+bool Socket::actingLikeServer()
+{
+    return server_;
+}
+
 void Socket::sendTo(const Message& message, const sockaddr_in& address)
 {
-    int result = sendto(fd_, static_cast<const void*>(&message), sizeof(message),
-                        0,reinterpret_cast<const sockaddr*>(&address),sizeof(address));
+    int result = write(fd_, static_cast<const void*>(&message), sizeof(message));
 
     if ( result < 0 )
-        throw std::system_error(errno, std::system_category(), "falló sendto: ");
+        throw std::system_error(errno, std::system_category(), "falló write: ");
 }
 
 void Socket::receiveFrom(Message& message, sockaddr_in& address)
 {
     socklen_t src_len = sizeof(address);
 
-    int result = recvfrom(fd_,static_cast<void*>(&message), sizeof(message), 0,
-        reinterpret_cast<sockaddr*>(&address), &src_len);
+    int result = read(fd_,static_cast<void*>(&message), sizeof(message));
 
     if (result < 0)
-        throw std::system_error(errno, std::system_category(), "falló recvfrom: ");
+        throw std::system_error(errno, std::system_category(), "falló read: ");
 }
 
 Socket& Socket::operator=(Socket&& older)
 {
     fd_=older.getFd();
     older.setFd(-1);
+    server_ = older.actingLikeServer();
 
     return *this;
 }

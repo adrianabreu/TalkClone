@@ -62,10 +62,15 @@ int main(void){
     sockaddr_in sin_local;
     sin_local = makeIpAddress("0.0.0.0",LOCALPORT);
 
+    //Preparar socket remoto
+    sockaddr_in sin_remote;
+    sin_remote = makeIpAddress("0.0.0.0",REMOTEPORT);
+
     Socket local;
 
     try {
-         local = Socket(sin_local);
+         //local = Socket(sin_local);
+         local = Socket(sin_remote,sin_local);
 
     }catch (std::system_error& e) {
 
@@ -81,9 +86,7 @@ int main(void){
     }
 
     if(aux == SUCCESS) {
-        //Preparar socket remoto
-        sockaddr_in sin_remote;
-        sin_remote = makeIpAddress("0.0.0.0",REMOTEPORT);
+
 
         //Estructura de mensaje
         Message message;
@@ -93,6 +96,9 @@ int main(void){
 
         std::thread hilo1;
         std::thread hilo2;
+
+        if(local.actingLikeServer())
+            local.handleConnections();
 
         try {
            hilo1=std::thread (&getandSendMessage,&local,
@@ -110,9 +116,7 @@ int main(void){
             << std::endl;
         }
 
-        //Wait for end of user input
         while(!endOfLoop);
-
         //We must finish both threads gracefully!
         request_cancellation(hilo1);
         request_cancellation(hilo2);
