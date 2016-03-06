@@ -106,6 +106,9 @@ void Socket::receiveFrom(Message& message, sockaddr_in& address)
 
     if (result < 0)
         throw std::system_error(errno, std::system_category(), "falló read: ");
+
+    if (result == 0)
+        throw std::system_error(errno, std::system_category(), "Connection was over: ");
 }
 
 Socket& Socket::operator=(Socket&& older)

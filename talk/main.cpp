@@ -2,11 +2,35 @@
 #include <thread>
 #include <pthread.h>
 
-#define LOCALPORT 6000
-#define REMOTEPORT 5500
+#define LOCALPORT 5500
+#define REMOTEPORT 6000
 
 #define SUCCESS 0
 #define ERR_SOCKET 3
+
+
+void setupSocket(Socket *local, sockaddr_in sin_remote,
+                 sockaddr_in sin_local, int *aux)
+{
+    try {
+         //*local = Socket(sin_local);
+         *local = Socket(sin_local,sin_remote);
+
+    }catch (std::system_error& e) {
+
+        if (errno == ENOBUFS || errno == ENOMEM) {
+            std::cerr << program_invocation_name << ": Not enough memory for creating Socket "
+            << std::endl;
+        } else {
+            std::cerr << program_invocation_name << ": " << e.what()
+            << std::endl;
+        }
+
+        *aux = ERR_SOCKET;    // Error. Termina el programa siempre con un valor > 0
+    }
+}
+
+
 
 void request_cancellation(std::thread& onethread)
 {
@@ -16,7 +40,7 @@ void request_cancellation(std::thread& onethread)
 void getandSendMessage(Socket *local, Message message, sockaddr_in remote,
                        std::string *message_text, bool *endOfLoop)
 {
-    //Limpiamos el mensaje previo para evitar caracteres extraños
+    //We should ead until read quit or eof
     while (!*endOfLoop) {
         std::getline(std::cin,*message_text);
 
@@ -55,72 +79,73 @@ void receiveAndShowMessage(Socket *socket, Message *message, sockaddr_in sin_rem
 
 }
 
+void firsThread(Socket *local,Message message, sockaddr_in *sin_remote,
+                std::string *message_text,bool *endOfLoop)
+{
+    try {
+        getandSendMessage(&*local,message,*sin_remote,&*message_text,
+                          &*endOfLoop);
+    } catch (std::system_error& e) {
+        std::cerr << program_invocation_name << ": " << e.what()
+        << std::endl;
+    }
+
+}
+
+void secondThread(Socket *local,Message *message, sockaddr_in *sin_remote)
+{
+    try {
+        receiveAndShowMessage(&*local,&*message,*sin_remote);
+    } catch (std::system_error& e) {
+        std::cerr << program_invocation_name << ": " << e.what()
+        << std::endl;
+    }
+
+}
+
+void startCommunication(Socket *local,sockaddr_in *sin_remote){
+    Message message; //Estructura de mensaje
+    std::string message_text(""); //String para input
+
+    bool endOfLoop = false;
+
+    std::thread hilo1;
+    std::thread hilo2;
+
+    if(local->actingLikeServer())
+        local->handleConnections();
+
+    hilo1=std::thread (&firsThread,&*local,
+                      message,&*sin_remote,&message_text,
+                      &endOfLoop);
+    hilo2=std::thread (&secondThread,&*local,&message,&*sin_remote);
+
+    //They shall no block each other
+    hilo1.detach();
+    hilo2.detach();
+
+    while(!endOfLoop);
+    //We must finish both threads gracefully!
+    request_cancellation(hilo1);
+    request_cancellation(hilo2);
+}
+
 int main(void){
 
     int aux = SUCCESS;
-    //Preparar estructura local
-    sockaddr_in sin_local;
-    sin_local = makeIpAddress("0.0.0.0",LOCALPORT);
-
-    //Preparar socket remoto
-    sockaddr_in sin_remote;
-    sin_remote = makeIpAddress("0.0.0.0",REMOTEPORT);
+    //Preparar estructura local y remoto
+    sockaddr_in sin_local = makeIpAddress("0.0.0.0",LOCALPORT);
+    sockaddr_in sin_remote = makeIpAddress("0.0.0.0",REMOTEPORT);
 
     Socket local;
 
-    try {
-         //local = Socket(sin_local);
-         local = Socket(sin_remote,sin_local);
-
-    }catch (std::system_error& e) {
-
-        if (errno == ENOBUFS || errno == ENOMEM) {
-            std::cerr << program_invocation_name << ": Not enough memory for creating Socket "
-            << std::endl;
-        } else {
-            std::cerr << program_invocation_name << ": " << e.what()
-            << std::endl;
-        }
-
-        aux = ERR_SOCKET;    // Error. Termina el programa siempre con un valor > 0
-    }
+    setupSocket(&local,sin_local,sin_remote,&aux);
 
     if(aux == SUCCESS) {
 
-
-        //Estructura de mensaje
-        Message message;
-        std::string message_text("");
-
-        bool endOfLoop = false;
-
-        std::thread hilo1;
-        std::thread hilo2;
-
-        if(local.actingLikeServer())
-            local.handleConnections();
-
-        try {
-           hilo1=std::thread (&getandSendMessage,&local,
-                             message,sin_remote,&message_text,
-                             &endOfLoop );
-           hilo2=std::thread (&receiveAndShowMessage,
-                             &local,&message,sin_remote);
-
-           //They shall no block each other
-           hilo1.detach();
-           hilo2.detach();
-
-        } catch (std::system_error& e) {
-            std::cerr << program_invocation_name << ": " << e.what()
-            << std::endl;
-        }
-
-        while(!endOfLoop);
-        //We must finish both threads gracefully!
-        request_cancellation(hilo1);
-        request_cancellation(hilo2);
+        startCommunication(&local,&sin_remote);
     }
 
     return aux;
 }
+
