@@ -39,6 +39,8 @@ Socket::Socket(const sockaddr_in& address, const sockaddr_in& remote)
     if (result < 0) {
         std::cout << "No se pudo conectar, entering server mode" << std::endl;
         serverMode(&address);
+    } else {
+        std::cout << "Conectado a " << inet_ntoa(remote.sin_addr) << std::endl;
     }
 }
 
@@ -89,7 +91,7 @@ void Socket::handleConnections(sockaddr_in *remote)
     fd_ = accept(fd_,reinterpret_cast<sockaddr*>(remote),&ssize);
 
     if (fd_ < 0) {
-        throw std::system_error(4, std::system_category()," Error on accept");
+        throw std::system_error(errno, std::system_category()," Error on accept");
     } else {
         std::cout << "Remote user: " << inet_ntoa(remote->sin_addr)
                   << " has connected from port " << ntohs(remote->sin_port) << std::endl;

@@ -2,8 +2,8 @@
 #include <thread>
 #include <pthread.h>
 
-#define LOCALPORT 5500
-#define REMOTEPORT 6000
+#define LOCALPORT 6000
+#define REMOTEPORT 5500
 
 #define SUCCESS 0
 #define ERR_SOCKET 3
@@ -35,28 +35,30 @@ void getandSendMessage(Socket *local, Message message, sockaddr_in remote,
 
 }
 
-void firsThread(Socket *local,Message message, sockaddr_in *sin_remote,
+void firsThread(Socket *local,Message message, sockaddr_in *sinRemote,
                 std::string *message_text,bool *endOfLoop)
 {
     try {
-        getandSendMessage(&*local,message,*sin_remote,&*message_text,
+        getandSendMessage(&*local,message,*sinRemote,&*message_text,
                           &*endOfLoop);
     } catch (std::system_error& e) {
         std::cerr << program_invocation_name << ": " << e.what()
         << std::endl;
+        *endOfLoop = true;
     }
 
 }
 //=======================================================================
 
-void receiveAndShowMessage(Socket *socket, Message *message, sockaddr_in sin_remote)
+void receiveAndShowMessage(Socket *socket, Message *message,
+                           sockaddr_in sinRemote)
 {
     while(1) {
         socket->receiveFrom(*message);
 
         // Mostrar el mensaje recibido en la terminal
-        char* remote_ip = inet_ntoa(sin_remote.sin_addr);
-        int remote_port = ntohs(sin_remote.sin_port);
+        char* remote_ip = inet_ntoa(sinRemote.sin_addr);
+        int remote_port = ntohs(sinRemote.sin_port);
 
         /* Para aumentar la seguridad de la aplicacion,
          * añadimos un fin de cadena que limite la lectura
@@ -71,13 +73,11 @@ void receiveAndShowMessage(Socket *socket, Message *message, sockaddr_in sin_rem
 
 }
 
-
-
 void secondThread(Socket *local,Message *message,
-                  sockaddr_in *sin_remote, bool *endOfLoop)
+                  sockaddr_in *sinRemote, bool *endOfLoop)
 {
     try {
-        receiveAndShowMessage(&*local,&*message,*sin_remote);
+        receiveAndShowMessage(&*local,&*message,*sinRemote);
     } catch (std::system_error& e) {
         std::cout << "Connection was over" << std::endl;
         *endOfLoop = true;
@@ -90,20 +90,20 @@ void secondThread(Socket *local,Message *message,
 /*
  * This function will shutdown the threads
  */
-void request_cancellation(std::thread& onethread)
+void requestCancellation(std::thread& oneThread)
 {
-    pthread_cancel(onethread.native_handle());
+    pthread_cancel(oneThread.native_handle());
 }
 
 /*===============================================================
  * END OF THREADS DOMAIN
  *===============================================================
  */
-void setupSocket(Socket *local, sockaddr_in sin_local,
-                 sockaddr_in sin_remote, int *aux)
+void setupSocket(Socket *local, sockaddr_in sinLocal,
+                 sockaddr_in sinRemote, int *aux)
 {
     try {
-         *local = Socket(sin_local,sin_remote);
+         *local = Socket(sinLocal,sinRemote);
 
     }catch (std::system_error& e) {
 
@@ -119,19 +119,19 @@ void setupSocket(Socket *local, sockaddr_in sin_local,
     }
 }
 
-void startCommunication(Socket *local,sockaddr_in *sin_remote)
+void startCommunication(Socket *local,sockaddr_in *sinRemote)
 {
     Message message; //Estructura de mensaje
     std::string message_text(""); //String para input
     bool endOfLoop = false;
 
     if(local->actingLikeServer())
-        local->handleConnections(&*sin_remote);
+        local->handleConnections(&*sinRemote);
     //First thread with get input and send messages
-    std::thread hilo1(&firsThread,&*local,message,&*sin_remote,&message_text,
+    std::thread hilo1(&firsThread,&*local,message,&*sinRemote,&message_text,
                       &endOfLoop);
     //Second thread will recv messages and print them
-    std::thread hilo2(&secondThread,&*local,&message,&*sin_remote,&endOfLoop);
+    std::thread hilo2(&secondThread,&*local,&message,&*sinRemote,&endOfLoop);
     //They shall no block main thread
     hilo1.detach();
     hilo2.detach();
@@ -139,24 +139,24 @@ void startCommunication(Socket *local,sockaddr_in *sin_remote)
     while(!endOfLoop)
         usleep(25000);
     //We must finish both threads gracefully!
-    request_cancellation(hilo1);
-    request_cancellation(hilo2);
+    requestCancellation(hilo1);
+    requestCancellation(hilo2);
 }
 
 int main(void){
 
     int aux = SUCCESS;
     //Preparar estructura local y remoto
-    sockaddr_in sin_local = makeIpAddress("0.0.0.0",LOCALPORT);
-    sockaddr_in sin_remote = makeIpAddress("0.0.0.0",REMOTEPORT);
+    sockaddr_in sinLocal = makeIpAddress("0.0.0.0",LOCALPORT);
+    sockaddr_in sinRemote = makeIpAddress("0.0.0.0",REMOTEPORT);
 
     Socket local;
 
-    setupSocket(&local,sin_local,sin_remote,&aux);
+    setupSocket(&local,sinLocal,sinRemote,&aux);
 
     if(aux == SUCCESS) {
 
-        startCommunication(&local,&sin_remote);
+        startCommunication(&local,&sinRemote);
     }
 
     return aux;
