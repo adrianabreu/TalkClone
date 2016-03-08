@@ -2,8 +2,8 @@
 #include <thread>
 #include <pthread.h>
 
-#define LOCALPORT 6000
-#define REMOTEPORT 5500
+#define LOCALPORT 5500
+#define REMOTEPORT 6000
 
 #define SUCCESS 0
 #define ERR_SOCKET 3
@@ -87,18 +87,17 @@ void secondThread(Socket *local,Message *message,
 
 //===============================================================
 
-/*
- * This function will shutdown the threads
- */
+//This function will shutdown the threads
 void requestCancellation(std::thread& oneThread)
 {
     pthread_cancel(oneThread.native_handle());
 }
 
 /*===============================================================
- * END OF THREADS DOMAIN
+ * End of Thread's domain
  *===============================================================
  */
+
 void setupSocket(Socket *local, sockaddr_in sinLocal,
                  sockaddr_in sinRemote, int *aux)
 {
@@ -108,14 +107,16 @@ void setupSocket(Socket *local, sockaddr_in sinLocal,
     }catch (std::system_error& e) {
 
         if (errno == ENOBUFS || errno == ENOMEM) {
-            std::cerr << program_invocation_name << ": Not enough memory for creating Socket "
-            << std::endl;
+            std::cerr << program_invocation_name
+                      << ": Not enough memory for creating Socket "
+                      << std::endl;
         } else {
             std::cerr << program_invocation_name << ": " << e.what()
             << std::endl;
         }
 
-        *aux = ERR_SOCKET;    // Error. Termina el programa siempre con un valor > 0
+        *aux = ERR_SOCKET;
+        // Error. Termina el programa siempre con un valor > 0
     }
 }
 
