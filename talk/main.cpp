@@ -8,33 +8,13 @@
 #define SUCCESS 0
 #define ERR_SOCKET 3
 
-
-void setupSocket(Socket *local, sockaddr_in sin_local,
-                 sockaddr_in sin_remote, int *aux)
-{
-    try {
-         *local = Socket(sin_local,sin_remote);
-
-    }catch (std::system_error& e) {
-
-        if (errno == ENOBUFS || errno == ENOMEM) {
-            std::cerr << program_invocation_name << ": Not enough memory for creating Socket "
-            << std::endl;
-        } else {
-            std::cerr << program_invocation_name << ": " << e.what()
-            << std::endl;
-        }
-
-        *aux = ERR_SOCKET;    // Error. Termina el programa siempre con un valor > 0
-    }
-}
-
-
-
-void request_cancellation(std::thread& onethread)
-{
-    pthread_cancel(onethread.native_handle());
-}
+/*===================================================
+ * Thread's domain
+ * ==================================================
+ * For asynchronous communication 2 threads are launched,
+ * one deals with getting input and sending messages,
+ * the second one deals with receiving and showing them.
+ */
 
 void getandSendMessage(Socket *local, Message message, sockaddr_in remote,
                        std::string *message_text, bool *endOfLoop)
@@ -54,6 +34,20 @@ void getandSendMessage(Socket *local, Message message, sockaddr_in remote,
     }
 
 }
+
+void firsThread(Socket *local,Message message, sockaddr_in *sin_remote,
+                std::string *message_text,bool *endOfLoop)
+{
+    try {
+        getandSendMessage(&*local,message,*sin_remote,&*message_text,
+                          &*endOfLoop);
+    } catch (std::system_error& e) {
+        std::cerr << program_invocation_name << ": " << e.what()
+        << std::endl;
+    }
+
+}
+//=======================================================================
 
 void receiveAndShowMessage(Socket *socket, Message *message, sockaddr_in sin_remote)
 {
@@ -77,18 +71,7 @@ void receiveAndShowMessage(Socket *socket, Message *message, sockaddr_in sin_rem
 
 }
 
-void firsThread(Socket *local,Message message, sockaddr_in *sin_remote,
-                std::string *message_text,bool *endOfLoop)
-{
-    try {
-        getandSendMessage(&*local,message,*sin_remote,&*message_text,
-                          &*endOfLoop);
-    } catch (std::system_error& e) {
-        std::cerr << program_invocation_name << ": " << e.what()
-        << std::endl;
-    }
 
-}
 
 void secondThread(Socket *local,Message *message,
                   sockaddr_in *sin_remote, bool *endOfLoop)
@@ -96,11 +79,44 @@ void secondThread(Socket *local,Message *message,
     try {
         receiveAndShowMessage(&*local,&*message,*sin_remote);
     } catch (std::system_error& e) {
-        std::cerr << program_invocation_name << ": " << e.what()
-        << std::endl;
+        std::cout << "Connection was over" << std::endl;
         *endOfLoop = true;
     }
 
+}
+
+//===============================================================
+
+/*
+ * This function will shutdown the threads
+ */
+void request_cancellation(std::thread& onethread)
+{
+    pthread_cancel(onethread.native_handle());
+}
+
+/*===============================================================
+ * END OF THREADS DOMAIN
+ *===============================================================
+ */
+void setupSocket(Socket *local, sockaddr_in sin_local,
+                 sockaddr_in sin_remote, int *aux)
+{
+    try {
+         *local = Socket(sin_local,sin_remote);
+
+    }catch (std::system_error& e) {
+
+        if (errno == ENOBUFS || errno == ENOMEM) {
+            std::cerr << program_invocation_name << ": Not enough memory for creating Socket "
+            << std::endl;
+        } else {
+            std::cerr << program_invocation_name << ": " << e.what()
+            << std::endl;
+        }
+
+        *aux = ERR_SOCKET;    // Error. Termina el programa siempre con un valor > 0
+    }
 }
 
 void startCommunication(Socket *local,sockaddr_in *sin_remote)
@@ -120,7 +136,8 @@ void startCommunication(Socket *local,sockaddr_in *sin_remote)
     hilo1.detach();
     hilo2.detach();
 
-    while(!endOfLoop);
+    while(!endOfLoop)
+        usleep(25000);
     //We must finish both threads gracefully!
     request_cancellation(hilo1);
     request_cancellation(hilo2);

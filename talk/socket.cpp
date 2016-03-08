@@ -87,7 +87,13 @@ void Socket::handleConnections(sockaddr_in *remote)
     //Accept returns a new socket with the connection
     socklen_t ssize = sizeof(*remote);
     fd_ = accept(fd_,reinterpret_cast<sockaddr*>(remote),&ssize);
-    std::cout << "Remote user: " << htons(remote->sin_port) << " has connected" << std::endl;
+
+    if (fd_ < 0) {
+        throw std::system_error(4, std::system_category()," Error on accept");
+    } else {
+        std::cout << "Remote user: " << inet_ntoa(remote->sin_addr)
+                  << " has connected from port " << ntohs(remote->sin_port) << std::endl;
+    }
 }
 
 int Socket::getFd()
@@ -116,6 +122,7 @@ void Socket::sendTo(const Message& message)
 
 void Socket::receiveFrom(Message& message)
 {
+    //Deal with incomplete messages
     int result = read(fd_,static_cast<void*>(&message), sizeof(message));
 
     if (result < 0)
