@@ -1,42 +1,46 @@
-# Talk - Primera parte
+# Talk - First part
 
-[talk](https://en.wikipedia.org/wiki/Talk_%28software%29) es un programa de mensajería instantánea en modo texto que fue introducido en los sistemas UNIX en 1983. Básicamente permitía que diferentes usuarios en diferentes máquinas pudieran conversar. Este sistema con el tiempo fue sustituido por el [IRC](https://en.wikipedia.org/wiki/Internet_Relay_Chat) —apareció en 1988— y este a su vez dio paso a la [multitud de sistemas de mensajería instantánea](https://en.wikipedia.org/wiki/Comparison_of_instant_messaging_protocols) que existen actualmente.
+[talk](https://en.wikipedia.org/wiki/Talk_%28software%29) is instant messaging program in text mode that was introduced in UNIX systems in 1983. Basically it allowed different users on different machines to talk. This system was substituted with time by [IRC](https://en.wikipedia.org/wiki/Internet_Relay_Chat) —it appeared in 1988— and it in turn gave way to the [multiple instant messages system](https://en.wikipedia.org/wiki/Comparison_of_instant_messaging_protocols) that exist nowadays.
 
 
-## Compilación:
+## Compiling:
 
-   Debido a que se utiliza tanto C++ 11 como hilos, hay que añadir estas directivas al compilar: **-std=c++11 -pthread**
+   Since we are using C++11 and threads, we need to add these directives when compiling: **-std=c++11 -pthread**
    
+   For example:
    `g++ -std=c++11 -pthread socket.cpp main.cpp`
 
-   Alternativamente si tienes qmake (debe usarse la version de qt5)
+   You can also use qmake (non qt5's qmake may generate errors)
    ```
    qmake talk.pro
    make
    ``` 
 
    
-## Prueba básica:
-   Este chat esta preparado para probarse en local inicialmente. Para poder hacer las pruebas básicas se han definido dos constantes, **LOCALPORT** y **REMOTEPORT**.
+## Basic test:
+   This chat is prepared for being tested locally. For making the basics tests, two constans have been defined **LOCALPORT** y **REMOTEPORT**.
 
-   Se deben compilar dos versiones del programa, con los puertos invertidos. 
+   Two versions of the program must be compiled with ports inverted.
 
-   Por ejemplo:
+   Examples:
    
-      Programa 1: LOCALPORT 3000 REMOTEPORT 4000
+      Program 1: LOCALPORT 3000 REMOTEPORT 4000
 
-      Programa 2: LOCALPORT 4000 REMOTEPORT 3000
+      Program 2: LOCALPORT 4000 REMOTEPORT 3000
 
-   Ahora podemos compilar ambos programas y probar a comunicarlos entre ellos.
+   Now we can execute both programs and check if everything goes right.
 
-## Características:
+## Features:
 
-1. El programa utiliza comunicación mediante SOCKETS.
-2. La comunicación es vía UDP.
-3. Se mandan estructuras de tipo Message, consistentes por ahora, en cadenas de caracteres.
-   
-## Modo de uso:
-1. Para mandar un mensaje simplemente escribe en la línea el mensaje a enviar y pulsa enter.
-2. Si otro usuario conectado manda un mensaje, este aparecerá en la pantalla indicando la ip del usuario que lo dijo.
-3. Para salir puedes escribir en cualquier momento `/quit` o presionar `Ctrl + D`.
+1. The program communicates through SOCKETS.
+2. The communication is TCP.
+3. The messages' structures are, by now, just strings.
+4. Communication is also asynchronous due to the use of threads.
+5. The program will enter into server mode if can't connect to remote.
+
+## Usage:
+1. Open the program, it will try to connect, if not possible, it will print a message.
+2. When connected, sending messages is easy as writting them and pressing enter.
+3. If another user sends the message, it will be printed on the screen after the ip of the user who sent it.
+4. For existing just write `/quit` or press `CTRL+D`.
 

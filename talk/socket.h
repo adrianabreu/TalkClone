@@ -13,36 +13,42 @@
 #include <cstring>
 #include <system_error>
 
-// Estructura de los mensajes
+// Messages structure
 struct Message {
 
     char text[1024];
 
 };
 
-//Helper function
+//Helper function for building sockaddr_in struct
 sockaddr_in makeIpAddress(const std::string& ip_address, int port);
 
 class Socket
 {
+
 private:
     bool server_; //This indicates if we are acting like a TCP server
-    int fd_;
+    int fd_; //Socket
     void normalSocket(const sockaddr_in& address);
 
 public:
     Socket();
+
     Socket(const sockaddr_in& address);
     //This tries to connect and if it isn't possible, starts to listen
     Socket(const sockaddr_in& address, const sockaddr_in& remote);
     ~Socket();
+
     int getFd();
-    void handleConnections(sockaddr_in *remote);
     void setFd(int newFd);
+
     bool actingLikeServer();
     void serverMode(const sockaddr_in *address);
+    void handleConnections(sockaddr_in *remote);
+
     void sendTo(const Message& message);
     void receiveFrom(Message& message);
+
     Socket& operator=(Socket&& older);
 };
 
