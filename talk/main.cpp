@@ -2,8 +2,8 @@
 #include <thread>
 #include <pthread.h>
 
-#define LOCALPORT 5500
-#define REMOTEPORT 6000
+#define LOCALPORT 6000
+#define REMOTEPORT 5500
 
 #define SUCCESS 0
 #define ERR_SOCKET 3
@@ -124,8 +124,15 @@ void startCommunication(Socket *local,sockaddr_in *sinRemote)
     std::string message_text(""); //String for input
     bool endOfLoop = false;
 
-    if(local->actingLikeServer())
-        local->handleConnections(&*sinRemote);
+    if(local->actingLikeServer()) {
+        try {
+            local->handleConnections(&*sinRemote);
+        } catch (std::system_error& e) {
+            std::cerr << program_invocation_name << ": " << e.what()
+            << std::endl;
+        }
+    }
+
     //First thread with get input and send messages
     std::thread hilo1(&firsThread,&*local,message,&*sinRemote,&message_text,
                       &endOfLoop);
