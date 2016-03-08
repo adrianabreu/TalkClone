@@ -56,19 +56,18 @@ void receiveAndShowMessage(Socket *socket, Message *message,
     while(1) {
         socket->receiveFrom(*message);
 
-        // Mostrar el mensaje recibido en la terminal
+        // Display received messages
         char* remote_ip = inet_ntoa(sinRemote.sin_addr);
         int remote_port = ntohs(sinRemote.sin_port);
 
-        /* Para aumentar la seguridad de la aplicacion,
-         * añadimos un fin de cadena que limite la lectura
-         * al tamaño del buffer, por si el mensaje no está
-         * delimitado de por sí
+        /* In order to increase the security we add a \0 to limit
+         * the lecture to the size of the buffer, maybe the message
+         * its not delimited by default.
          */
         message->text[1023] = '\0';
 
-        std::cout << "El sistema " << remote_ip << ":" << remote_port <<
-        " envió el mensaje '" << message->text << "'" << std::endl;
+        std::cout << "System " << remote_ip << ":" << remote_port <<
+        " sent: '" << message->text << "'" << std::endl;
     }
 
 }
@@ -115,15 +114,14 @@ void setupSocket(Socket *local, sockaddr_in sinLocal,
             << std::endl;
         }
 
-        *aux = ERR_SOCKET;
-        // Error. Termina el programa siempre con un valor > 0
+        *aux = ERR_SOCKET; //Program won't finish with 0
     }
 }
 
 void startCommunication(Socket *local,sockaddr_in *sinRemote)
 {
-    Message message; //Estructura de mensaje
-    std::string message_text(""); //String para input
+    Message message;
+    std::string message_text(""); //String for input
     bool endOfLoop = false;
 
     if(local->actingLikeServer())
@@ -146,8 +144,8 @@ void startCommunication(Socket *local,sockaddr_in *sinRemote)
 
 int main(void){
 
-    int aux = SUCCESS;
-    //Preparar estructura local y remoto
+    int aux = SUCCESS; //Return value (0)
+    //Preparing both structs local and Remote
     sockaddr_in sinLocal = makeIpAddress("0.0.0.0",LOCALPORT);
     sockaddr_in sinRemote = makeIpAddress("0.0.0.0",REMOTEPORT);
 

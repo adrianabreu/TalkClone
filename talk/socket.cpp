@@ -14,7 +14,7 @@ sockaddr_in makeIpAddress(const std::string& ip_address, int port){
 Socket::Socket()
 {
     /*
-     * We have to start the file descriptor to a non
+     * We have to initialize the file descriptor to a non
      * valid value
      */
     fd_ = -1;
@@ -37,28 +37,28 @@ Socket::Socket(const sockaddr_in& address, const sockaddr_in& remote)
                          sizeof(remote));
 
     if (result < 0) {
-        std::cout << "No se pudo conectar, entering server mode" << std::endl;
+        std::cout << "Couldn't connect, entering server mode" << std::endl;
         serverMode(&address);
     } else {
-        std::cout << "Conectado a " << inet_ntoa(remote.sin_addr) << std::endl;
+        std::cout << "Connected to " << inet_ntoa(remote.sin_addr) << std::endl;
     }
 }
 
 void Socket::normalSocket(const sockaddr_in& address)
 {
-    // Crear el socket local
+    // Create local socket
     fd_ = socket(AF_INET, SOCK_STREAM, 0);
 
     if ( fd_ < 0 )
         throw std::system_error(errno, std::system_category(),
-                                "no se pudo crear el socket");
+                                "it wasn't possible to create the socket");
 
-    //Asignar la dirección con bind
+    //Bind the socket to a known direction
     int result = bind(fd_, reinterpret_cast<const sockaddr*>(&address),
                       sizeof(address));
 
     if ( result < 0 )
-        throw std::system_error(errno, std::system_category(),"falló bind: ");
+        throw std::system_error(errno, std::system_category(),"bind error: ");
 
 
 }
@@ -66,12 +66,12 @@ void Socket::normalSocket(const sockaddr_in& address)
 void Socket::serverMode(const sockaddr_in *address)
 {
     server_ = true;
-    //We have to listen for a 5 connections
-    int result = listen(fd_, 5);
+    //Actually we just need to listen for 1 connection
+    int result = listen(fd_, 1);
 
     if (result < 0)
         throw std::system_error(errno, std::system_category(),
-                                "no se pudo escuchar");
+                                "listen error");
     else
         std::cout << "Entering server mode... Listening on " <<
                       ntohs(address->sin_port) << std::endl;
@@ -80,7 +80,7 @@ void Socket::serverMode(const sockaddr_in *address)
 
 Socket::~Socket()
 {
-    //Finalizamos el descriptor del fichero para terminar la conexion
+    //We just need to close the file descriptor for end connection
     close(fd_);
 }
 
@@ -91,10 +91,12 @@ void Socket::handleConnections(sockaddr_in *remote)
     fd_ = accept(fd_,reinterpret_cast<sockaddr*>(remote),&ssize);
 
     if (fd_ < 0) {
-        throw std::system_error(errno, std::system_category()," Error on accept");
+        throw std::system_error(errno, std::system_category(),
+                                " Error on accept");
     } else {
         std::cout << "Remote user: " << inet_ntoa(remote->sin_addr)
-                  << " has connected from port " << ntohs(remote->sin_port) << std::endl;
+                  << " has connected from port " << ntohs(remote->sin_port)
+                  << std::endl;
     }
 }
 
@@ -117,9 +119,10 @@ void Socket::sendTo(const Message& message)
 {
     int result = write(fd_, static_cast<const void*>(&message), sizeof(message));
 
-    if ( result < 0 )
+    if ( result < 0 ) {
         std::cout << "Your partner has diconnected" << std::endl;
-        //throw std::system_error(errno, std::system_category(), "falló write: ");
+        throw std::system_error(errno, std::system_category(), "write error: ");
+    }
 }
 
 void Socket::receiveFrom(Message& message)
@@ -128,10 +131,11 @@ void Socket::receiveFrom(Message& message)
     int result = read(fd_,static_cast<void*>(&message), sizeof(message));
 
     if (result < 0)
-        throw std::system_error(errno, std::system_category(), "falló read: ");
+        throw std::system_error(errno, std::system_category(), "read error: ");
 
     if (result == 0) //If read = 0, socket was closed
-        throw std::system_error(errno, std::system_category(), "Connection was over: ");
+        throw std::system_error(errno, std::system_category(),
+                                "Connection was over: ");
 }
 
 Socket& Socket::operator=(Socket&& older)
