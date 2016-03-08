@@ -33,14 +33,16 @@ private:
 public:
     Socket();
     Socket(const sockaddr_in& address);
+    //This tries to connect and if it isn't possible, starts to listen
     Socket(const sockaddr_in& address, const sockaddr_in& remote);
     ~Socket();
     int getFd();
-    void handleConnections();
+    void handleConnections(sockaddr_in *remote);
     void setFd(int newFd);
     bool actingLikeServer();
-    void sendTo(const Message& message, const sockaddr_in& address);
-    void receiveFrom(Message& message, sockaddr_in& address);
+    void serverMode(const sockaddr_in *address);
+    void sendTo(const Message& message);
+    void receiveFrom(Message& message);
     Socket& operator=(Socket&& older);
 };
 

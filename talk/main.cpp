@@ -9,11 +9,10 @@
 #define ERR_SOCKET 3
 
 
-void setupSocket(Socket *local, sockaddr_in sin_remote,
-                 sockaddr_in sin_local, int *aux)
+void setupSocket(Socket *local, sockaddr_in sin_local,
+                 sockaddr_in sin_remote, int *aux)
 {
     try {
-         //*local = Socket(sin_local);
          *local = Socket(sin_local,sin_remote);
 
     }catch (std::system_error& e) {
@@ -50,8 +49,7 @@ void getandSendMessage(Socket *local, Message message, sockaddr_in remote,
         if (!*endOfLoop) {
             message_text->copy(message.text, sizeof(message.text) - 1, 0);
             message.text[message_text->length()] = '\0';
-            local->sendTo(reinterpret_cast<const Message&>(message),
-                     reinterpret_cast<const sockaddr_in&>(remote));
+            local->sendTo(reinterpret_cast<const Message&>(message));
         }
     }
 
@@ -60,7 +58,7 @@ void getandSendMessage(Socket *local, Message message, sockaddr_in remote,
 void receiveAndShowMessage(Socket *socket, Message *message, sockaddr_in sin_remote)
 {
     while(1) {
-        socket->receiveFrom(*message, sin_remote);
+        socket->receiveFrom(*message);
 
         // Mostrar el mensaje recibido en la terminal
         char* remote_ip = inet_ntoa(sin_remote.sin_addr);
@@ -92,35 +90,33 @@ void firsThread(Socket *local,Message message, sockaddr_in *sin_remote,
 
 }
 
-void secondThread(Socket *local,Message *message, sockaddr_in *sin_remote)
+void secondThread(Socket *local,Message *message,
+                  sockaddr_in *sin_remote, bool *endOfLoop)
 {
     try {
         receiveAndShowMessage(&*local,&*message,*sin_remote);
     } catch (std::system_error& e) {
         std::cerr << program_invocation_name << ": " << e.what()
         << std::endl;
+        *endOfLoop = true;
     }
 
 }
 
-void startCommunication(Socket *local,sockaddr_in *sin_remote){
+void startCommunication(Socket *local,sockaddr_in *sin_remote)
+{
     Message message; //Estructura de mensaje
     std::string message_text(""); //String para input
-
     bool endOfLoop = false;
 
-    std::thread hilo1;
-    std::thread hilo2;
-
     if(local->actingLikeServer())
-        local->handleConnections();
-
-    hilo1=std::thread (&firsThread,&*local,
-                      message,&*sin_remote,&message_text,
+        local->handleConnections(&*sin_remote);
+    //First thread with get input and send messages
+    std::thread hilo1(&firsThread,&*local,message,&*sin_remote,&message_text,
                       &endOfLoop);
-    hilo2=std::thread (&secondThread,&*local,&message,&*sin_remote);
-
-    //They shall no block each other
+    //Second thread will recv messages and print them
+    std::thread hilo2(&secondThread,&*local,&message,&*sin_remote,&endOfLoop);
+    //They shall no block main thread
     hilo1.detach();
     hilo2.detach();
 

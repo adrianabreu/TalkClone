@@ -25,13 +25,7 @@ Socket::Socket(const sockaddr_in& address)
 {
     normalSocket(address);
 
-    server_ = true;
-    //We have to listen for a 5 connections
-    int result = listen(fd_, 5);
-
-    if (result < 0)
-        throw std::system_error(errno, std::system_category(),
-                                "no se pudo escuchar");
+    serverMode(&address);
 
 }
 
@@ -42,9 +36,10 @@ Socket::Socket(const sockaddr_in& address, const sockaddr_in& remote)
     int result = connect(fd_,reinterpret_cast<const sockaddr*>(&remote),
                          sizeof(remote));
 
-    if (result < 0)
-        throw std::system_error(errno, std::system_category(),
-                                "no se pudo conectar");
+    if (result < 0) {
+        std::cout << "No se pudo conectar, entering server mode" << std::endl;
+        serverMode(&address);
+    }
 }
 
 void Socket::normalSocket(const sockaddr_in& address)
@@ -62,6 +57,23 @@ void Socket::normalSocket(const sockaddr_in& address)
 
     if ( result < 0 )
         throw std::system_error(errno, std::system_category(),"falló bind: ");
+
+
+}
+
+void Socket::serverMode(const sockaddr_in *address)
+{
+    server_ = true;
+    //We have to listen for a 5 connections
+    int result = listen(fd_, 5);
+
+    if (result < 0)
+        throw std::system_error(errno, std::system_category(),
+                                "no se pudo escuchar");
+    else
+        std::cout << "Entering server mode... Listening on " <<
+                      ntohs(address->sin_port) << std::endl;
+
 }
 
 Socket::~Socket()
@@ -70,9 +82,12 @@ Socket::~Socket()
     close(fd_);
 }
 
-void Socket::handleConnections()
+void Socket::handleConnections(sockaddr_in *remote)
 {
-    fd_ = accept(fd_,nullptr,nullptr);
+    //Accept returns a new socket with the connection
+    socklen_t ssize = sizeof(*remote);
+    fd_ = accept(fd_,reinterpret_cast<sockaddr*>(remote),&ssize);
+    std::cout << "Remote user: " << htons(remote->sin_port) << " has connected" << std::endl;
 }
 
 int Socket::getFd()
@@ -90,24 +105,23 @@ bool Socket::actingLikeServer()
     return server_;
 }
 
-void Socket::sendTo(const Message& message, const sockaddr_in& address)
+void Socket::sendTo(const Message& message)
 {
     int result = write(fd_, static_cast<const void*>(&message), sizeof(message));
 
     if ( result < 0 )
-        throw std::system_error(errno, std::system_category(), "falló write: ");
+        std::cout << "Your partner has diconnected" << std::endl;
+        //throw std::system_error(errno, std::system_category(), "falló write: ");
 }
 
-void Socket::receiveFrom(Message& message, sockaddr_in& address)
+void Socket::receiveFrom(Message& message)
 {
-    socklen_t src_len = sizeof(address);
-
     int result = read(fd_,static_cast<void*>(&message), sizeof(message));
 
     if (result < 0)
         throw std::system_error(errno, std::system_category(), "falló read: ");
 
-    if (result == 0)
+    if (result == 0) //If read = 0, socket was closed
         throw std::system_error(errno, std::system_category(), "Connection was over: ");
 }
 
