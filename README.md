@@ -39,7 +39,7 @@
 5. The program will enter into server mode if can't connect to remote.
 
 ## Usage:
-1. Open the program, it will try to connect, if not possible, it will print a message.
+1. Open the program, it will try to connect, if it is not possible, it will print a message as it waits for incoming connections.
 2. When connected, sending messages is easy as writting them and pressing enter.
 3. If another user sends the message, it will be printed on the screen after the ip of the user who sent it.
 4. For existing just write `/quit` or press `CTRL+D`.
