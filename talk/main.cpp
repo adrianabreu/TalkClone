@@ -155,10 +155,8 @@ int main(void){
 
     setupSocket(&local,sinLocal,sinRemote,&aux);
 
-    if(aux == SUCCESS) {
-
+    if(aux == SUCCESS)
         startCommunication(&local,&sinRemote);
-    }
 
     return aux;
 }
