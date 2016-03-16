@@ -2,8 +2,8 @@
 #include <thread>
 #include <pthread.h>
 
-#define LOCALPORT 6000
-#define REMOTEPORT 5500
+#define LOCALPORT 5500
+#define REMOTEPORT 6000
 
 #define SUCCESS 0
 #define ERR_SOCKET 3
@@ -90,6 +90,7 @@ void secondThread(Socket *local,Message *message,
 void requestCancellation(std::thread& oneThread)
 {
     pthread_cancel(oneThread.native_handle());
+    oneThread.join();
 }
 
 /*===============================================================
@@ -138,9 +139,6 @@ void startCommunication(Socket *local,sockaddr_in *sinRemote)
                       &endOfLoop);
     //Second thread will recv messages and print them
     std::thread hilo2(&secondThread,&*local,&message,&*sinRemote,&endOfLoop);
-    //They shall no block main thread
-    hilo1.detach();
-    hilo2.detach();
 
     while(!endOfLoop)
         usleep(25000);
