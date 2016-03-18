@@ -44,6 +44,12 @@ Socket::Socket(const sockaddr_in& address, const sockaddr_in& remote)
     }
 }
 
+Socket::Socket(const Socket& older)
+{
+    fd_=older.getFd();
+    server_ = older.actingLikeServer();
+}
+
 void Socket::normalSocket(const sockaddr_in& address)
 {
     // Create local socket
@@ -100,7 +106,7 @@ void Socket::handleConnections(sockaddr_in *remote)
     }
 }
 
-int Socket::getFd()
+int Socket::getFd() const
 {
     return fd_;
 }
@@ -110,7 +116,7 @@ void Socket::setFd(int newFd)
     fd_ = newFd;
 }
 
-bool Socket::actingLikeServer()
+bool Socket::actingLikeServer() const
 {
     return server_;
 }

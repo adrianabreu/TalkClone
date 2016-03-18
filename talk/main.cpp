@@ -99,11 +99,12 @@ void requestCancellation(std::thread& oneThread)
  *===============================================================
  */
 
-void setupSocket(Socket *local, sockaddr_in sinLocal,
+Socket setupSocket(sockaddr_in sinLocal,
                  sockaddr_in sinRemote, int *aux)
 {
+    Socket local;
     try {
-         *local = Socket(sinLocal,sinRemote);
+         local = Socket(sinLocal,sinRemote);
 
     }catch (std::system_error& e) {
 
@@ -118,6 +119,7 @@ void setupSocket(Socket *local, sockaddr_in sinLocal,
 
         *aux = ERR_SOCKET; //Program won't finish with 0
     }
+    return local;
 }
 
 void startCommunication(Socket *local,sockaddr_in *sinRemote)
@@ -152,9 +154,7 @@ int main(void){
     sockaddr_in sinLocal = makeIpAddress("0.0.0.0",LOCALPORT);
     sockaddr_in sinRemote = makeIpAddress("0.0.0.0",REMOTEPORT);
 
-    Socket local;
-
-    setupSocket(&local,sinLocal,sinRemote,&aux);
+    Socket local = setupSocket(sinLocal,sinRemote,&aux);
 
     if(aux == SUCCESS)
         startCommunication(&local,&sinRemote);
