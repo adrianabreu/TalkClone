@@ -16,8 +16,7 @@
  * the second one deals with receiving and showing them.
  */
 
-void getandSendMessage(Socket *local, sockaddr_in remote,
-                       bool *endOfLoop)
+void getandSendMessage(Socket *local, bool *endOfLoop)
 {
     //We should ead until read quit or eof
     Message message;
@@ -37,15 +36,14 @@ void getandSendMessage(Socket *local, sockaddr_in remote,
 
 }
 
-void firsThread(Socket *local, sockaddr_in *sinRemote,
-                bool *endOfLoop)
+void firsThread(Socket& local, bool& endOfLoop)
 {
     try {
-        getandSendMessage(&*local,*sinRemote,&*endOfLoop);
+        getandSendMessage(&local,&endOfLoop);
     } catch (std::system_error& e) {
         std::cerr << program_invocation_name << ": " << e.what()
         << std::endl;
-        *endOfLoop = true;
+        endOfLoop = true;
     }
 
 }
@@ -73,14 +71,14 @@ void receiveAndShowMessage(Socket *socket, sockaddr_in sinRemote)
 
 }
 
-void secondThread(Socket *local, sockaddr_in *sinRemote,
-                  bool *endOfLoop)
+void secondThread(Socket& local, sockaddr_in sinRemote,
+                  bool& endOfLoop)
 {
     try {
-        receiveAndShowMessage(&*local,*sinRemote);
+        receiveAndShowMessage(&local,sinRemote);
     } catch (std::system_error& e) {
         std::cout << "Connection was over" << std::endl;
-        *endOfLoop = true;
+        endOfLoop = true;
     }
 
 }
@@ -136,9 +134,11 @@ void startCommunication(Socket *local,sockaddr_in *sinRemote)
     }
 
     //First thread with get input and send messages
-    std::thread hilo1(&firsThread,&*local,&*sinRemote, &endOfLoop);
+    std::thread hilo1(&firsThread,std::ref(*local),
+                      std::ref(endOfLoop));
     //Second thread will recv messages and print them
-    std::thread hilo2(&secondThread,&*local,&*sinRemote,&endOfLoop);
+    std::thread hilo2(&secondThread,std::ref(*local),std::ref(*sinRemote),
+                      std::ref(endOfLoop));
 
     while(!endOfLoop)
         usleep(25000);
