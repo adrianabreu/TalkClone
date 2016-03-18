@@ -2,8 +2,8 @@
 #include <thread>
 #include <pthread.h>
 
-#define LOCALPORT 5500
-#define REMOTEPORT 6000
+#define LOCALPORT 6000
+#define REMOTEPORT 5500
 
 #define SUCCESS 0
 #define ERR_SOCKET 3
@@ -16,31 +16,32 @@
  * the second one deals with receiving and showing them.
  */
 
-void getandSendMessage(Socket *local, Message message, sockaddr_in remote,
-                       std::string *message_text, bool *endOfLoop)
+void getandSendMessage(Socket *local, sockaddr_in remote,
+                       bool *endOfLoop)
 {
     //We should ead until read quit or eof
+    Message message;
+    std::string message_text;
     while (!*endOfLoop) {
-        std::getline(std::cin,*message_text);
+        std::getline(std::cin,message_text);
 
-        if(*message_text == "/quit" || std::cin.eof())
+        if(message_text == "/quit" || std::cin.eof())
             *endOfLoop = true;
 
         if (!*endOfLoop) {
-            message_text->copy(message.text, sizeof(message.text) - 1, 0);
-            message.text[message_text->length()] = '\0';
-            local->sendTo(reinterpret_cast<const Message&>(message));
+            message_text.copy(message.text, sizeof(message.text) - 1, 0);
+            message.text[message_text.length()] = '\0';
+            local->sendTo(message);
         }
     }
 
 }
 
-void firsThread(Socket *local,Message message, sockaddr_in *sinRemote,
-                std::string *message_text,bool *endOfLoop)
+void firsThread(Socket *local, sockaddr_in *sinRemote,
+                bool *endOfLoop)
 {
     try {
-        getandSendMessage(&*local,message,*sinRemote,&*message_text,
-                          &*endOfLoop);
+        getandSendMessage(&*local,*sinRemote,&*endOfLoop);
     } catch (std::system_error& e) {
         std::cerr << program_invocation_name << ": " << e.what()
         << std::endl;
@@ -50,11 +51,11 @@ void firsThread(Socket *local,Message message, sockaddr_in *sinRemote,
 }
 //=======================================================================
 
-void receiveAndShowMessage(Socket *socket, Message *message,
-                           sockaddr_in sinRemote)
+void receiveAndShowMessage(Socket *socket, sockaddr_in sinRemote)
 {
+    Message message;
     while(1) {
-        socket->receiveFrom(*message);
+        socket->receiveFrom(message);
 
         // Display received messages
         char* remote_ip = inet_ntoa(sinRemote.sin_addr);
@@ -64,19 +65,19 @@ void receiveAndShowMessage(Socket *socket, Message *message,
          * the lecture to the size of the buffer, maybe the message
          * its not delimited by default.
          */
-        message->text[1023] = '\0';
+        message.text[1023] = '\0';
 
         std::cout << "System " << remote_ip << ":" << remote_port <<
-        " sent: '" << message->text << "'" << std::endl;
+        " sent: '" << message.text << "'" << std::endl;
     }
 
 }
 
-void secondThread(Socket *local,Message *message,
-                  sockaddr_in *sinRemote, bool *endOfLoop)
+void secondThread(Socket *local, sockaddr_in *sinRemote,
+                  bool *endOfLoop)
 {
     try {
-        receiveAndShowMessage(&*local,&*message,*sinRemote);
+        receiveAndShowMessage(&*local,*sinRemote);
     } catch (std::system_error& e) {
         std::cout << "Connection was over" << std::endl;
         *endOfLoop = true;
@@ -121,8 +122,6 @@ void setupSocket(Socket *local, sockaddr_in sinLocal,
 
 void startCommunication(Socket *local,sockaddr_in *sinRemote)
 {
-    Message message;
-    std::string message_text(""); //String for input
     bool endOfLoop = false;
 
     if(local->actingLikeServer()) {
@@ -135,10 +134,9 @@ void startCommunication(Socket *local,sockaddr_in *sinRemote)
     }
 
     //First thread with get input and send messages
-    std::thread hilo1(&firsThread,&*local,message,&*sinRemote,&message_text,
-                      &endOfLoop);
+    std::thread hilo1(&firsThread,&*local,&*sinRemote, &endOfLoop);
     //Second thread will recv messages and print them
-    std::thread hilo2(&secondThread,&*local,&message,&*sinRemote,&endOfLoop);
+    std::thread hilo2(&secondThread,&*local,&*sinRemote,&endOfLoop);
 
     while(!endOfLoop)
         usleep(25000);
