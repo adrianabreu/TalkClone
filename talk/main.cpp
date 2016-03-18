@@ -2,8 +2,8 @@
 #include <thread>
 #include <pthread.h>
 
-#define LOCALPORT 6000
-#define REMOTEPORT 5500
+#define LOCALPORT 5500
+#define REMOTEPORT 6000
 
 #define SUCCESS 0
 #define ERR_SOCKET 3

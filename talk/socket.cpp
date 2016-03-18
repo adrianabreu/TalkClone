@@ -134,14 +134,18 @@ void Socket::sendTo(const Message& message)
 void Socket::receiveFrom(Message& message)
 {
     //Deal with incomplete messages
-    int result = read(fd_,static_cast<void*>(&message), sizeof(message));
+    int result = 0;
+    while(result < sizeof(message)) {
+        result = read(fd_,static_cast<void*>(&message), sizeof(message));
 
-    if (result < 0)
-        throw std::system_error(errno, std::system_category(), "read error: ");
+        if (result < 0)
+            throw std::system_error(errno, std::system_category(),
+                                    "read error: ");
 
-    if (result == 0) //If read = 0, socket was closed
-        throw std::system_error(errno, std::system_category(),
-                                "Connection was over: ");
+        if (result == 0) //If read = 0, socket was closed
+            throw std::system_error(errno, std::system_category(),
+                                    "Connection was over: ");
+    }
 }
 
 Socket& Socket::operator=(Socket&& older)
