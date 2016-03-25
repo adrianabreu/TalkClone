@@ -1,12 +1,41 @@
 #include "socket.h"
 #include <thread>
 #include <pthread.h>
+#include <atomic>
+#include <csignal>
 
 #define LOCALPORT 5500
 #define REMOTEPORT 6000
 
 #define SUCCESS 0
 #define ERR_SOCKET 3
+
+std::atomic<bool> endOfLoop(false);
+
+/*
+ *=====================================
+ * SIGNAL HANDLING
+ *=====================================
+ */
+
+void int_signal_handler(int signum)
+{
+    if (signum == SIGINT || signum == SIGTERM || signum == SIGHUP) {
+        endOfLoop = true;
+    }
+}
+
+void setSigMask(int sigAction)
+{
+    //If we block all signals the inherited thread will block them also
+    sigset_t set;
+    sigfillset(&set);
+    int res = pthread_sigmask(sigAction, &set, nullptr);
+    if ( res != 0 )
+        throw std::system_error(errno, std::system_category(),
+        "It wasn't possible to block signals receiving");
+}
+
 
 /*===================================================
  * Thread's domain
@@ -16,18 +45,18 @@
  * the second one deals with receiving and showing them.
  */
 
-void getandSendMessage(Socket *local, bool *endOfLoop)
+void getandSendMessage(Socket *local,std::atomic<bool>& endOfLoop)
 {
     //We should ead until read quit or eof
     Message message;
     std::string message_text;
-    while (!*endOfLoop) {
+    while (! endOfLoop) {
         std::getline(std::cin,message_text);
 
         if(message_text == "/quit" || std::cin.eof())
-            *endOfLoop = true;
+            endOfLoop = true;
 
-        if (!*endOfLoop) {
+        if (!endOfLoop) {
             message_text.copy(message.text, sizeof(message.text) - 1, 0);
             message.text[message_text.length()] = '\0';
             local->sendTo(message);
@@ -36,10 +65,10 @@ void getandSendMessage(Socket *local, bool *endOfLoop)
 
 }
 
-void firsThread(Socket& local, bool& endOfLoop)
+void firsThread(Socket& local,std::atomic<bool>& endOfLoop)
 {
     try {
-        getandSendMessage(&local,&endOfLoop);
+        getandSendMessage(&local,endOfLoop);
     } catch (std::system_error& e) {
         std::cerr << program_invocation_name << ": " << e.what()
         << std::endl;
@@ -72,7 +101,7 @@ void receiveAndShowMessage(Socket *socket, sockaddr_in sinRemote)
 }
 
 void secondThread(Socket& local, sockaddr_in sinRemote,
-                  bool& endOfLoop)
+                 std::atomic<bool>& endOfLoop)
 {
     try {
         receiveAndShowMessage(&local,sinRemote);
@@ -122,7 +151,6 @@ Socket setupSocket(sockaddr_in sinLocal,
 
 void startCommunication(Socket *local,sockaddr_in *sinRemote)
 {
-    bool endOfLoop = false;
 
     if(local->actingLikeServer()) {
         try {
@@ -133,12 +161,25 @@ void startCommunication(Socket *local,sockaddr_in *sinRemote)
         }
     }
 
+    try {
+        setSigMask(SIG_BLOCK);
+    } catch (std::system_error& e) {
+        std::cerr << program_invocation_name << ": " << e.what()
+        << std::endl;
+    }
+
     //First thread with get input and send messages
     std::thread hilo1(&firsThread,std::ref(*local),
                       std::ref(endOfLoop));
     //Second thread will recv messages and print them
     std::thread hilo2(&secondThread,std::ref(*local),std::ref(*sinRemote),
                       std::ref(endOfLoop));
+    try {
+        setSigMask(SIG_UNBLOCK);
+    } catch (std::system_error& e) {
+        std::cerr << program_invocation_name << ": " << e.what()
+        << std::endl;
+    }
 
     while(!endOfLoop)
         usleep(25000);
@@ -156,9 +197,13 @@ int main(void){
 
     Socket local = setupSocket(sinLocal,sinRemote,&aux);
 
-    if(aux == SUCCESS)
+    if(aux == SUCCESS) {
+        signal(SIGINT, &int_signal_handler);
+        signal(SIGTERM, &int_signal_handler);
+        signal(SIGHUP, &int_signal_handler);
         startCommunication(&local,&sinRemote);
 
+    }
     return aux;
 }
 
