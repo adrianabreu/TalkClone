@@ -188,13 +188,35 @@ void startCommunication(Socket *local,sockaddr_in *sinRemote)
     requestCancellation(hilo2);
 }
 
-int main(void){
+int main(int argc, char* argv[]){
 
+    bool help_option = false;
+    bool server_option = false;
+    std::string port_option;
+    bool client_option = false;
+    int c;
+    while ((c = getopt(argc, argv, "hsc:p:")) != -1) {
+        switch (c) {
+            case 'h':
+                help_option = 1;
+            break;
+            case 's':
+                server_option = 1;
+            break;
+            case 'p':
+                std::printf("opción p con valor '%s'\n", optarg);
+                port_option = std::string(optarg);
+            break;
+            case 'c':
+                client_option = 1;
+            break;
+            default:
+                std::fprintf(stderr, "?? getopt devolvió código de error 0%o ??\n", c);
+        }
+    }
     int aux = SUCCESS; //Return value (0)
-    //Preparing both structs local and Remote
     sockaddr_in sinLocal = makeIpAddress("0.0.0.0",LOCALPORT);
     sockaddr_in sinRemote = makeIpAddress("0.0.0.0",REMOTEPORT);
-
     Socket local = setupSocket(sinLocal,sinRemote,&aux);
 
     if(aux == SUCCESS) {
