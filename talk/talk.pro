@@ -8,10 +8,12 @@ SOURCES += main.cpp \
     socket.cpp \
     tcpserver.cpp \
     client.cpp \
-    server.cpp
+    server.cpp \
+    helpsingnalsthreads.cpp
 
 HEADERS += \
     socket.h \
     tcpserver.h \
     client.h \
-    server.h
+    server.h \
+    helpsignalsthreads.h
