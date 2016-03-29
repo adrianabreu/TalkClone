@@ -4,6 +4,19 @@ TCPServer::TCPServer()
 {
     fd_ = -1;
 }
+TCPServer::TCPServer(const std::string& ip_address, int port)
+{
+    sockaddr_in& address = makeIpAddress(ip_address, port);
+    normalSocket(address);
+    int result = listen(fd_, 5);
+
+    if (result < 0)
+        throw std::system_error(errno, std::system_category(),
+                                "listen error");
+    else
+        std::cout << "Entering server mode... Listening on " <<
+                      ntohs(address.sin_port) << std::endl;
+}
 
 TCPServer::TCPServer(const std::string& ip_address, int port)
 {

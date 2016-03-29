@@ -28,12 +28,11 @@ class Socket
 
 protected:
     int fd_; //Socket
-    void normalSocket(const sockaddr_in& address);
+    void normalSocket(const sockaddr_in& address); //Helper function
 
 public:
-    Socket();
+    Socket(); //Default constructor with invalid fd
     Socket(const sockaddr_in& address);
-    //This tries to connect and if it isn't possible, starts to listen
     Socket(const Socket&);
     ~Socket();
 

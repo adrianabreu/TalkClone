@@ -6,8 +6,12 @@ CONFIG += thread
 
 SOURCES += main.cpp \
     socket.cpp \
-    tcpserver.cpp
+    tcpserver.cpp \
+    client.cpp \
+    server.cpp
 
 HEADERS += \
     socket.h \
-    tcpserver.h
+    tcpserver.h \
+    client.h \
+    server.h

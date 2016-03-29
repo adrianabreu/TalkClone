@@ -1,5 +1,7 @@
 #include "socket.h"
 #include "tcpserver.h"
+#include "client.h"
+#include "server.h"
 
 #include <thread>
 #include <pthread.h>
@@ -38,82 +40,6 @@ void setSigMask(int sigAction)
         "It wasn't possible to block signals receiving");
 }
 
-
-/*===================================================
- * Thread's domain
- * ==================================================
- * For asynchronous communication 2 threads are launched,
- * one deals with getting input and sending messages,
- * the second one deals with receiving and showing them.
- */
-
-void getandSendMessage(Socket *local,std::atomic<bool>& endOfLoop)
-{
-    //We should ead until read quit or eof
-    Message message;
-    std::string message_text;
-    while (! endOfLoop) {
-        std::getline(std::cin,message_text);
-
-        if(message_text == "/quit" || std::cin.eof())
-            endOfLoop = true;
-
-        if (!endOfLoop) {
-            message_text.copy(message.text, sizeof(message.text) - 1, 0);
-            message.text[message_text.length()] = '\0';
-            local->sendTo(message);
-        }
-    }
-
-}
-
-void firsThread(Socket& local,std::atomic<bool>& endOfLoop)
-{
-    try {
-        getandSendMessage(&local,endOfLoop);
-    } catch (std::system_error& e) {
-        std::cerr << program_invocation_name << ": " << e.what()
-        << std::endl;
-        endOfLoop = true;
-    }
-
-}
-//=======================================================================
-
-void receiveAndShowMessage(Socket *socket, sockaddr_in sinRemote)
-{
-    Message message;
-    while(1) {
-        socket->receiveFrom(message);
-
-        // Display received messages
-        char* remote_ip = inet_ntoa(sinRemote.sin_addr);
-        int remote_port = ntohs(sinRemote.sin_port);
-
-        /* In order to increase the security we add a \0 to limit
-         * the lecture to the size of the buffer, maybe the message
-         * its not delimited by default.
-         */
-        message.text[1023] = '\0';
-
-        std::cout << "System " << remote_ip << ":" << remote_port <<
-        " sent: '" << message.text << "'" << std::endl;
-    }
-
-}
-
-void secondThread(Socket& local, sockaddr_in sinRemote,
-                 std::atomic<bool>& endOfLoop)
-{
-    try {
-        receiveAndShowMessage(&local,sinRemote);
-    } catch (std::system_error& e) {
-        std::cout << "Connection was over" << std::endl;
-        endOfLoop = true;
-    }
-
-}
-
 //===============================================================
 
 //This function will shutdown the threads
@@ -128,74 +54,65 @@ void requestCancellation(std::thread& oneThread)
  *===============================================================
  */
 
-Socket setupSocket(sockaddr_in sinLocal,
-                 sockaddr_in sinRemote, int *aux)
-{
-    Socket local;
-    try {
-         local = Socket(sinLocal,sinRemote);
+/*===============================================================
+ *  HELPER FUNCTIONS
+ *===============================================================
+ */
+void displayHelp() {
+    std::cout << "Usage mode: " << std::endl << "-h  Display this message"
+              << std::endl << "-s  Enter serve mode" << std::endl
+              << "-c IP  Client mode, connect remote ip" << std::endl
+              << "-p PORT Listen / connect on / to that port" << std::endl;
 
-    }catch (std::system_error& e) {
-
-        if (errno == ENOBUFS || errno == ENOMEM) {
-            std::cerr << program_invocation_name
-                      << ": Not enough memory for creating Socket "
-                      << std::endl;
-        } else {
-            std::cerr << program_invocation_name << ": " << e.what()
-            << std::endl;
-        }
-
-        *aux = ERR_SOCKET; //Program won't finish with 0
-    }
-    return local;
 }
 
-void startCommunication(Socket *local,sockaddr_in *sinRemote)
-{
+void handleSignals() {
+    signal(SIGINT, &int_signal_handler);
+    signal(SIGTERM, &int_signal_handler);
+    signal(SIGHUP, &int_signal_handler);
+}
 
-    if(local->actingLikeServer()) {
-        try {
-            local->handleConnections(&*sinRemote);
-        } catch (std::system_error& e) {
-            std::cerr << program_invocation_name << ": " << e.what()
-            << std::endl;
+void parseArguments(bool help_option,bool server_option,std::string port_option,
+                    std::string client_option, int *aux) {
+    int port = 0; //A port 0 given to the bind function make it to use a random
+                  //chose from the OS
+
+    if (help_option) {
+        displayHelp();
+    }
+    if (!port_option.isEmpty()) {
+        port = stoi(port_option);
+    }
+    if (server_option) {
+
+        TCPServer local = setupServer("0.0.0.0");
+        //You can pass now ip and ports to the main
+        if(*aux == SUCCESS) {
+            handleSignals();
+            startServer(&local,&sinRemote);
         }
     }
-
-    try {
-        setSigMask(SIG_BLOCK);
-    } catch (std::system_error& e) {
-        std::cerr << program_invocation_name << ": " << e.what()
-        << std::endl;
+    else if (client_option != "") { //Server are also clients so servers
+                                    //have priority
+        Socket local = client::setupSocket("0.0.0.0",client_option,port,&*aux);
+        if(*aux == SUCCESS) {
+            handleSignals();
+            client::startClient(&local,&sinRemote);
+        }
     }
-
-    //First thread with get input and send messages
-    std::thread hilo1(&firsThread,std::ref(*local),
-                      std::ref(endOfLoop));
-    //Second thread will recv messages and print them
-    std::thread hilo2(&secondThread,std::ref(*local),std::ref(*sinRemote),
-                      std::ref(endOfLoop));
-    try {
-        setSigMask(SIG_UNBLOCK);
-    } catch (std::system_error& e) {
-        std::cerr << program_invocation_name << ": " << e.what()
-        << std::endl;
-    }
-
-    while(!endOfLoop)
-        usleep(25000);
-    //We must finish both threads gracefully!
-    requestCancellation(hilo1);
-    requestCancellation(hilo2);
 }
+
+/*===============================================================
+ * End of Thread's domain
+ *===============================================================
+ */
 
 int main(int argc, char* argv[]){
 
     bool help_option = false;
     bool server_option = false;
     std::string port_option;
-    bool client_option = false;
+    std::string client_option;
     int c;
     while ((c = getopt(argc, argv, "hsc:p:")) != -1) {
         switch (c) {
@@ -206,32 +123,19 @@ int main(int argc, char* argv[]){
                 server_option = 1;
             break;
             case 'p':
-                std::printf("opción p con valor '%s'\n", optarg);
                 port_option = std::string(optarg);
             break;
             case 'c':
-                client_option = 1;
+                client_option = std::string(optarg);
             break;
             default:
-                std::fprintf(stderr, "?? getopt devolvió código de error 0%o ??\n", c);
+                std::fprintf(stderr, "?? getopt devolvió 0%o ??\n", c);
         }
     }
-
     int aux = SUCCESS; //Return value (0)
-    if (server_option) {
-        TCPServer local = setupSocket();
-        //You can pass now ip and ports to the main
-    }
+    parseArguments(help_option,server_option,port_option,client_option,&aux);
 
-    Socket local = setupSocket(sinLocal,sinRemote,&aux);
 
-    if(aux == SUCCESS) {
-        signal(SIGINT, &int_signal_handler);
-        signal(SIGTERM, &int_signal_handler);
-        signal(SIGHUP, &int_signal_handler);
-        startCommunication(&local,&sinRemote);
-
-    }
     return aux;
 }
 

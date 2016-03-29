@@ -20,10 +20,20 @@ Socket::Socket()
     fd_ = -1;
 }
 
-Socket::Socket(const sockaddr_in& address)
+Socket::Socket(std::string& localIpaddress, std::string& remoteIpaddress,
+               int remotePort)
 {
-    normalSocket(address);
+    normalSocket(makeIpAddress(address, port));
+    sockaddr_in remote = makeIpAddress(remoteIpaddress, 0);
+    int result = connect(fd_,reinterpret_cast<const sockaddr*>(&remote),
+                         sizeof(remote));
 
+    if (result < 0) {
+        std::cout << "Couldn't connect to remote host " << ipaddress
+                  << std::endl;
+    } else {
+        std::cout << "Connected to " << inet_ntoa(remote.sin_addr) << std::endl;
+    }
 }
 
 

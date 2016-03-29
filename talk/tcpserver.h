@@ -9,7 +9,6 @@ public:
     TCPServer(const sockaddr_in& address);
     void serverMode(const sockaddr_in *address);
     void handleConnections(sockaddr_in *remote);
-
 };
 
 #endif // TCPSERVER_H
