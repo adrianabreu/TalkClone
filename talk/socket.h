@@ -26,8 +26,7 @@ sockaddr_in makeIpAddress(const std::string& ip_address, int port);
 class Socket
 {
 
-private:
-    bool server_; //This indicates if we are acting like a TCP server
+protected:
     int fd_; //Socket
     void normalSocket(const sockaddr_in& address);
 
@@ -35,16 +34,11 @@ public:
     Socket();
     Socket(const sockaddr_in& address);
     //This tries to connect and if it isn't possible, starts to listen
-    Socket(const sockaddr_in& address, const sockaddr_in& remote);
     Socket(const Socket&);
     ~Socket();
 
     int getFd() const;
     void setFd(int newFd);
-
-    bool actingLikeServer() const;
-    void serverMode(const sockaddr_in *address);
-    void handleConnections(sockaddr_in *remote);
 
     void sendTo(const Message& message);
     void receiveFrom(Message& message);

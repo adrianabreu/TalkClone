@@ -1,4 +1,6 @@
 #include "socket.h"
+#include "tcpserver.h"
+
 #include <thread>
 #include <pthread.h>
 #include <atomic>
@@ -198,11 +200,9 @@ int main(int argc, char* argv[]){
     while ((c = getopt(argc, argv, "hsc:p:")) != -1) {
         switch (c) {
             case 'h':
-                std::cout << "opcion h" << std::endl;
                 help_option = 1;
             break;
             case 's':
-                std::cout << "opcion s" << std::endl;
                 server_option = 1;
             break;
             case 'p':
@@ -219,9 +219,10 @@ int main(int argc, char* argv[]){
 
     int aux = SUCCESS; //Return value (0)
     if (server_option) {
-        sockaddr_in sinLocal = makeIpAddress("0.0.0.0",LOCALPORT);
-        sockaddr_in sinRemote = makeIpAddress("0.0.0.0",REMOTEPORT);
+        TCPServer local = setupSocket();
+        //You can pass now ip and ports to the main
     }
+
     Socket local = setupSocket(sinLocal,sinRemote,&aux);
 
     if(aux == SUCCESS) {

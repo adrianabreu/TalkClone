@@ -5,7 +5,9 @@ CONFIG -= qt
 CONFIG += thread
 
 SOURCES += main.cpp \
-    socket.cpp
+    socket.cpp \
+    tcpserver.cpp
 
 HEADERS += \
-    socket.h
+    socket.h \
+    tcpserver.h
