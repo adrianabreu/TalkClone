@@ -9,7 +9,8 @@
 
 std::atomic<bool> endOfLoop(false);
 
-void handleSignals() {
+void handleSignals()
+{
     signal(SIGINT, &int_signal_handler);
     signal(SIGTERM, &int_signal_handler);
     signal(SIGHUP, &int_signal_handler);

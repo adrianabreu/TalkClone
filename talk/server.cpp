@@ -42,8 +42,6 @@ void server::firstThread(std::atomic<bool>& endOfLoop)
 
 }
 
-//Each thread should grab their own socket and read them
-//we shall, copy it?
 void server::receiveAndShowMessage()
 {
     Message message;
