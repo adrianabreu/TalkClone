@@ -154,7 +154,11 @@ void server::startServer(TCPServer *local)
     //to close the sockets while they're reading?
 }
 
-void server::sendAll(const Message message)
+//The resources have been locked before, so we can
+void server::sendAll(const Message& message)
 {
-
+    //C++ is like fucking awesome
+    for(auto &it1 : clients_) {
+        it1.second.sendTo(message);
+    }
 }

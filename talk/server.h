@@ -16,7 +16,7 @@ namespace server {
     void threadReceive(int& tempfd);
     void receiveAndShowMessage();
     void startServer(TCPServer *local); //main program
-    void sendAll(const Message message);
+    void sendAll(const Message& message);
     //The first thread gets the message from input and send it
     void getandSendMessage(std::atomic<bool>& endOfLoop);
     void firstThread(std::atomic<bool>& endOfLoop);
