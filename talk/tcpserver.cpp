@@ -52,6 +52,12 @@ int TCPServer::handleConnections(sockaddr_in *remote)
     return aux; //We return the new socket
 }
 
+void TCPServer::pushThread(std::thread& mythread)
+{
+    threads_.push_back(std::move(mythread));
+
+}
+
 TCPServer& TCPServer::operator =(TCPServer&& older)
 {
     fd_= older.getFd();

@@ -1,10 +1,13 @@
 #include "server.h"
+#include <mutex>
+#include <thread>
+#include <map>
 
 std::map<std::thread::id,Socket> clients_; //List of sockets clients, with map each thread
                            //with socket it controls
 std::mutex clients_mutex;
 
-std::vector<std::thread> threads_;
+//std::vector<std::thread> threads_;
 
 void server::getandSendMessage(std::atomic<bool>& endOfLoop)
 {
@@ -71,12 +74,19 @@ void server::threadReceive(int& tempfd)
     // so the others threads could send messages to it
     //for avoiding problems we will lock the resource
     try {
+        setSigMask(SIG_BLOCK);
         std::unique_lock<std::mutex> lock(clients_mutex);
         clients_[std::this_thread::get_id()] = Socket(tempfd);
         lock.unlock();
         server::receiveAndShowMessage();
     } catch (std::system_error& e) {
-        std::cout << "Connection was over" << std::endl;
+        //probably the socket is over here
+        //std::cout << "Error receiving" << std::endl;
+        //so what we do?
+        //we finish
+        std::unique_lock<std::mutex> lock(clients_mutex);
+        clients_.erase(std::this_thread::get_id());
+        lock.unlock();
         //Here we got to destroy the socket and the thread.
         //How?
     }
@@ -88,8 +98,8 @@ void server::threadListen(TCPServer *local)
         try {
             sockaddr_in sinRemote = {};
             int tempfd = local->handleConnections(&sinRemote);
-            auto thread = std::thread(&threadReceive,std::ref(tempfd));
-            threads_.push_back(std::move(thread));
+            auto mythread = std::thread(&threadReceive,std::ref(tempfd));
+            local->pushThread(mythread);
         } catch (std::system_error& e) {
             std::cerr << program_invocation_name << ": " << e.what()
             << std::endl;

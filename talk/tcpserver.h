@@ -3,20 +3,17 @@
 #define TCPSERVER_H
 #include "socket.h"
 #include "helpsignalsthreads.h"
-
-#include <mutex>
-#include <thread>
 #include <vector>
-#include <map>
 
 
+/*
 extern std::map<std::thread::id,Socket> clients_; //List of sockets clients, with map each thread
                            //with socket it controls
 extern std::mutex clients_mutex;
 
-extern std::vector<std::thread> threads_; //List of children threads launched
+extern  //List of children threads launched
                                    //from new clients connections
-
+*/
 /*
  * This class does the basic server stuff,
  * listen on a single port, and handle new connections
@@ -24,6 +21,8 @@ extern std::vector<std::thread> threads_; //List of children threads launched
 
 class TCPServer : public Socket
 {
+private:
+    std::vector<std::thread> threads_;
 public:
     TCPServer();
     TCPServer(const std::string& address, int port);
@@ -32,6 +31,7 @@ public:
     ~TCPServer();
     //This keeps on an accept block and returns the new fd from accept
     int handleConnections(sockaddr_in *remote);
+    void pushThread(std::thread& mythread);
 
     TCPServer& operator=(TCPServer&& older);
 };
