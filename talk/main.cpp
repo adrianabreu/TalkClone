@@ -10,7 +10,9 @@
 std::atomic<bool> endOfLoop(false);
 
 void handleSignals() {
-    std::cout << "I'm handling!" << std::endl;
+    signal(SIGINT, &int_signal_handler);
+    signal(SIGTERM, &int_signal_handler);
+    signal(SIGHUP, &int_signal_handler);
 }
 
 void displayHelp()
@@ -74,7 +76,7 @@ int main(int argc, char* argv[]){
                 client_option = std::string(optarg);
             break;
             default:
-                std::fprintf(stderr, "?? getopt devolvió 0%o ??\n", c);
+                std::fprintf(stderr, "getopt devolvió 0%o \n", c);
         }
     }
     int aux = SUCCESS; //Return value (0)

@@ -23,9 +23,14 @@ TCPServer::TCPServer(const std::string& ip_address, int port)
     if (result < 0)
         throw std::system_error(errno, std::system_category(),
                                 "listen error");
-    else
+    else {
+        //int sockfd, struct sockaddr *addr, socklen_t *addrlen
+        socklen_t add_len = sizeof(address);
+        getsockname(fd_,reinterpret_cast<sockaddr*>(&address),
+                &add_len);
         std::cout << "Entering server mode... Listening on " <<
                       ntohs(address.sin_port) << std::endl;
+    }
 }
 
 int TCPServer::handleConnections(sockaddr_in *remote)
