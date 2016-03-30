@@ -10,11 +10,11 @@
 #include <map>
 
 
-std::map<std::thread::id,Socket> clients_; //List of sockets clients, with map each thread
+extern std::map<std::thread::id,Socket> clients_; //List of sockets clients, with map each thread
                            //with socket it controls
-std::mutex clients_mutex;
+extern std::mutex clients_mutex;
 
-std::vector<std::thread> threads_; //List of children threads launched
+extern std::vector<std::thread> threads_; //List of children threads launched
                                    //from new clients connections
 
 /*

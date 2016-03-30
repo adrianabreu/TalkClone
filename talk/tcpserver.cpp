@@ -2,14 +2,15 @@
 
 TCPServer::TCPServer() {}
 
-TCPServer::TCPServer(const TCPServer& older)
-{
+TCPServer::TCPServer(const TCPServer& older) : Socket()
+{ //If you do not call socket, a warning is launched
     fd_ = older.getFd();
 }
 
 TCPServer::~TCPServer()
 {
-    for(int i = 0; i < threads_.size(); ++i)
+    //All the threads we have created must be destroyed
+    for(unsigned int i = 0; i < threads_.size(); ++i)
         requestCancellation(threads_[i]);
 }
 
@@ -49,4 +50,7 @@ int TCPServer::handleConnections(sockaddr_in *remote)
 TCPServer& TCPServer::operator =(TCPServer&& older)
 {
     fd_= older.getFd();
+    older.setFd(-1);
+
+    return *this;
 }

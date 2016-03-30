@@ -7,6 +7,8 @@
 #define LOCALPORT 5500
 #define REMOTEPORT 6000
 
+std::atomic<bool> endOfLoop(false);
+
 void handleSignals() {
     std::cout << "I'm handling!" << std::endl;
 }
@@ -31,7 +33,6 @@ void parseArguments(bool help_option,bool server_option,std::string port_option,
     if (server_option) {
 
         TCPServer local = server::setupServer("0.0.0.0",port,*&aux);
-        //You can pass now ip and ports to the main
         if(*aux == SUCCESS) {
             handleSignals();
             server::startServer(&local);
@@ -74,7 +75,6 @@ int main(int argc, char* argv[]){
     }
     int aux = SUCCESS; //Return value (0)
     parseArguments(help_option,server_option,port_option,client_option,&aux);
-
 
     return aux;
 }

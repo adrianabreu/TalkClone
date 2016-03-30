@@ -1,6 +1,7 @@
 #include "client.h"
 #include "helpsignalsthreads.h"
 #define ERR_SOCKET 3
+
 /*===================================================
  * Thread's domain
  * ==================================================
@@ -70,8 +71,9 @@ void client::secondThread(Socket& local, std::atomic<bool>& endOfLoop)
  * ==================================================
  */
 
-Socket client::setupSocket(const std::string& ipLocal,const std::string& ipRemote,
-                           int port, int* aux)
+
+Socket client::setupSocket(const std::string& ipLocal,
+                           const std::string& ipRemote, int port, int* aux)
 {
     Socket local;
     try {
@@ -92,6 +94,7 @@ Socket client::setupSocket(const std::string& ipLocal,const std::string& ipRemot
     }
     return local;
 }
+
 
 void client::startClient(Socket *local)
 {

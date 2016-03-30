@@ -32,9 +32,9 @@ protected:
 
 public:
     Socket(); //Default constructor with invalid fd
-    Socket(int tempfd);
+    Socket(int tempfd); //Constructor for server using the fd from accept
     Socket(const std::string& localIpaddress,const std::string& remoteIpaddress,
-           int remotePort);
+           int remotePort); //Normal constructor based on ip
     Socket(const sockaddr_in& local, const sockaddr_in& remote);
     Socket(const Socket&);
     ~Socket();

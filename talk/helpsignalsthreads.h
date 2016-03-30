@@ -10,7 +10,7 @@
 #define SUCCESS 0
 #define ERR_SOCKET 3
 
-std::atomic<bool> endOfLoop(false);
+extern std::atomic<bool> endOfLoop;
 
 /*
  * These are helping functions common to both

@@ -4,7 +4,9 @@
 /*
  * These are helper functions for setting up the
  * server and launch the new threads
- * also it controls the sendall
+ * also it controls the sendall, all servers have
+ * 3 + n thredas
+ * main + listen + input + n * clientsthreads
  */
 namespace server {
     TCPServer setupServer(const std::string& ipAdress, int port, int* aux);
@@ -18,7 +20,6 @@ namespace server {
     //The first thread gets the message from input and send it
     void getandSendMessage(std::atomic<bool>& endOfLoop);
     void firstThread(std::atomic<bool>& endOfLoop);
-
-
+    void shutdown();
 }
 #endif // SERVER_H

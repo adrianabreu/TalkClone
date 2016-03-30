@@ -4,8 +4,8 @@
 #include "helpsignalsthreads.h"
 
 /*
- * These are helper functions for
- *
+ * These are helper functions for the client setup
+ * and threads launched
  */
 namespace client {
     Socket setupSocket(const std::string& sinLocal,const std::string& sinRemote,

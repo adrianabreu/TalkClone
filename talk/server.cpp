@@ -1,5 +1,10 @@
 #include "server.h"
 
+std::map<std::thread::id,Socket> clients_; //List of sockets clients, with map each thread
+                           //with socket it controls
+std::mutex clients_mutex;
+
+std::vector<std::thread> threads_;
 
 void server::getandSendMessage(std::atomic<bool>& endOfLoop)
 {
@@ -141,9 +146,12 @@ void server::startServer(TCPServer *local)
 
     while(!endOfLoop)
         usleep(25000);
-    //We must finish both threads gracefully!
+    //We must close all the sockets and finish all the threads
     requestCancellation(hilo1);
     requestCancellation(hilo2);
+    //All children threads will be closed on destructor
+    //will that launch and exception?
+    //to close the sockets while they're reading?
 }
 
 void server::sendAll(const Message message)
