@@ -9,6 +9,8 @@ TCPServer::TCPServer(const TCPServer& older) : Socket()
 
 TCPServer::~TCPServer()
 {
+    //We have to close our socket
+    close(fd_);
     //All the threads we have created must be destroyed
     for(unsigned int i = 0; i < threads_.size(); ++i)
         requestCancellation(threads_[i]);
@@ -24,7 +26,6 @@ TCPServer::TCPServer(const std::string& ip_address, int port)
         throw std::system_error(errno, std::system_category(),
                                 "listen error");
     else {
-        //int sockfd, struct sockaddr *addr, socklen_t *addrlen
         socklen_t add_len = sizeof(address);
         getsockname(fd_,reinterpret_cast<sockaddr*>(&address),
                 &add_len);
@@ -36,7 +37,6 @@ TCPServer::TCPServer(const std::string& ip_address, int port)
 int TCPServer::handleConnections(sockaddr_in *remote)
 {
     int aux = -1; // no valid fd
-    //Accept returns a new socket with the connection
     socklen_t ssize = sizeof(*remote);
     int tempfd = accept(fd_,reinterpret_cast<sockaddr*>(remote),&ssize);
 

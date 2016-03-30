@@ -21,7 +21,6 @@ extern std::atomic<bool> endOfLoop;
 void int_signal_handler(int signum);
 void setSigMask(int sigAction);
 
-//Thread
 //This function will shutdown the threads
 void requestCancellation(std::thread& oneThread);
 

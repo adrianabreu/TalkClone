@@ -37,6 +37,7 @@ public:
            int remotePort); //Normal constructor based on ip
     Socket(const sockaddr_in& local, const sockaddr_in& remote);
     Socket(const Socket&);
+
     ~Socket();
 
     int getFd() const;

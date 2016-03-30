@@ -3,11 +3,9 @@
 #include <thread>
 #include <map>
 
-std::map<std::thread::id,Socket> clients_; //List of sockets clients, with map each thread
-                           //with socket it controls
-std::mutex clients_mutex;
+std::map<std::thread::id,Socket> clients_; //List of sockets clients,
 
-//std::vector<std::thread> threads_;
+std::mutex clients_mutex;
 
 void server::getandSendMessage(std::atomic<bool>& endOfLoop)
 {
@@ -73,7 +71,6 @@ void server::threadReceive(int& tempfd)
     // so the others threads could send messages to it
     //for avoiding problems we will lock the resource
     try {
-        setSigMask(SIG_BLOCK);
         std::unique_lock<std::mutex> lock(clients_mutex);
         clients_[std::this_thread::get_id()] = Socket(tempfd);
         lock.unlock();
@@ -155,12 +152,10 @@ void server::startServer(TCPServer *local)
 
     while(!endOfLoop)
         usleep(25000);
+
     //We must close all the sockets and finish all the threads
     requestCancellation(hilo1);
     requestCancellation(hilo2);
-    //All children threads will be closed on destructor
-    //will that launch and exception?
-    //to close the sockets while they're reading?
 }
 
 //The resources have been locked before, so we can send all

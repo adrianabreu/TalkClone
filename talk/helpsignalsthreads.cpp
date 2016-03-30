@@ -2,6 +2,7 @@
 
 #define SUCCESS 0
 #define ERR_SOCKET 3
+
 /*
  *=====================================
  * SIGNAL HANDLING
