@@ -9,7 +9,7 @@ SOURCES += main.cpp \
     tcpserver.cpp \
     client.cpp \
     server.cpp \
-    helpsingnalsthreads.cpp
+    helpsignalsthreads.cpp
 
 HEADERS += \
     socket.h \

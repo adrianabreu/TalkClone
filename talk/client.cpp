@@ -1,5 +1,6 @@
 #include "client.h"
 #include "helpsignalsthreads.h"
+#define ERR_SOCKET 3
 /*===================================================
  * Thread's domain
  * ==================================================
@@ -74,7 +75,7 @@ Socket client::setupSocket(const std::string& ipLocal,const std::string& ipRemot
 {
     Socket local;
     try {
-         local = Socket(makeIpAddress(ipLocal,0),makeIpAddress(ipRemote,port));
+         local = Socket(ipLocal,ipRemote,port);
 
     }catch (std::system_error& e) {
 
@@ -92,7 +93,7 @@ Socket client::setupSocket(const std::string& ipLocal,const std::string& ipRemot
     return local;
 }
 
-void client::startClient(Socket *local,sockaddr_in *sinRemote)
+void client::startClient(Socket *local)
 {
     //We have to block the signals on the children
     try {
@@ -105,7 +106,7 @@ void client::startClient(Socket *local,sockaddr_in *sinRemote)
     std::thread hilo1(&firsThread,std::ref(*local),
                       std::ref(endOfLoop));
 
-    std::thread hilo2(&secondThread,std::ref(*local),std::ref(*sinRemote),
+    std::thread hilo2(&secondThread,std::ref(*local),
                       std::ref(endOfLoop));
 
     //Now we unblock the signals on the main thread

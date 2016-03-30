@@ -21,16 +21,22 @@ Socket::Socket()
     fd_ = -1;
 }
 
-Socket::Socket(std::string& localIpaddress, std::string& remoteIpaddress,
+Socket::Socket(int tempfd)
+{
+    fd_ = tempfd;
+}
+
+Socket::Socket(const std::string& localIpAddress,
+               const std::string& remoteIpAddress,
                int remotePort)
 {
-    normalSocket(makeIpAddress(address, port));
-    sockaddr_in remote = makeIpAddress(remoteIpaddress, 0);
+    Socket::normalSocket(makeIpAddress(localIpAddress, 0));
+    sockaddr_in remote = makeIpAddress(remoteIpAddress, remotePort);
     int result = connect(fd_,reinterpret_cast<const sockaddr*>(&remote),
                          sizeof(remote));
 
     if (result < 0) {
-        std::cout << "Couldn't connect to remote host " << ipaddress
+        std::cout << "Couldn't connect to remote host " << remoteIpAddress
                   << std::endl;
     } else {
         std::cout << "Connected to " << inet_ntoa(remote.sin_addr) << std::endl;

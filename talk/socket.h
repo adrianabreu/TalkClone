@@ -32,7 +32,10 @@ protected:
 
 public:
     Socket(); //Default constructor with invalid fd
-    Socket(const sockaddr_in& address);
+    Socket(int tempfd);
+    Socket(const std::string& localIpaddress,const std::string& remoteIpaddress,
+           int remotePort);
+    Socket(const sockaddr_in& local, const sockaddr_in& remote);
     Socket(const Socket&);
     ~Socket();
 

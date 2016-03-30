@@ -1,48 +1,28 @@
 #ifndef HELPSIGNALSTHREADS_H
 #define HELPSIGNALSTHREADS_H
-
+#pragma once
 #include <thread>
 #include <pthread.h>
 #include <csignal>
 #include <atomic>
+#include <system_error>
+
+#define SUCCESS 0
+#define ERR_SOCKET 3
 
 std::atomic<bool> endOfLoop(false);
 
-#endif // HELPSIGNALSTHREADS_H
 /*
- *=====================================
- * SIGNAL HANDLING
- *=====================================
+ * These are helping functions common to both
+ * server and client side.
  */
 
-void int_signal_handler(int signum)
-{
-    if (signum == SIGINT || signum == SIGTERM || signum == SIGHUP) {
-        endOfLoop = true;
-    }
-}
+//Signal helping
+void int_signal_handler(int signum);
+void setSigMask(int sigAction);
 
-void setSigMask(int sigAction)
-{
-    //If we block all signals the inherited thread will block them also
-    sigset_t set;
-    sigfillset(&set);
-    int res = pthread_sigmask(sigAction, &set, nullptr);
-    if ( res != 0 )
-        throw std::system_error(errno, std::system_category(),
-        "It wasn't possible to block signals receiving");
-}
-
-//===============================================================
-
+//Thread
 //This function will shutdown the threads
-void requestCancellation(std::thread& oneThread)
-{
-    pthread_cancel(oneThread.native_handle());
-    oneThread.join();
-}
+void requestCancellation(std::thread& oneThread);
 
-/*===============================================================
- * End of Thread's domain
- *===============================================================
- */
+#endif // HELPSIGNALSTHREADS_H

@@ -1,4 +1,7 @@
 #include "helpsignalsthreads.h"
+
+#define SUCCESS 0
+#define ERR_SOCKET 3
 /*
  *=====================================
  * SIGNAL HANDLING
@@ -25,16 +28,14 @@ void setSigMask(int sigAction)
         "It wasn't possible to block signals receiving");
 }
 
-//===============================================================
-
-//This function will shutdown the threads
+/*===============================================================
+ * Threads's domain
+ *===============================================================
+ */
 void requestCancellation(std::thread& oneThread)
 {
     pthread_cancel(oneThread.native_handle());
     oneThread.join();
 }
 
-/*===============================================================
- * End of Thread's domain
- *===============================================================
- */
+

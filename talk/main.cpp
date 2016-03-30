@@ -7,27 +7,34 @@
 #define LOCALPORT 5500
 #define REMOTEPORT 6000
 
-#define SUCCESS 0
-#define ERR_SOCKET 3
+void handleSignals() {
+    std::cout << "I'm handling!" << std::endl;
+}
+
+void displayHelp()
+{
+    std::cout << "I'm helping!" << std::endl;
+}
 
 void parseArguments(bool help_option,bool server_option,std::string port_option,
-                    std::string client_option, int *aux) {
+                    std::string client_option, int *aux)
+{
     int port = 0; //A port 0 given to the bind function make it to use a random
                   //chose from the OS
 
     if (help_option) {
         displayHelp();
     }
-    if (!port_option.isEmpty()) {
+    if (!port_option.empty()) {
         port = stoi(port_option);
     }
     if (server_option) {
 
-        TCPServer local = setupServer("0.0.0.0");
+        TCPServer local = server::setupServer("0.0.0.0",port,*&aux);
         //You can pass now ip and ports to the main
         if(*aux == SUCCESS) {
             handleSignals();
-            startServer(&local,&sinRemote);
+            server::startServer(&local);
         }
     }
     else if (client_option != "") { //Server are also clients so servers
@@ -35,15 +42,10 @@ void parseArguments(bool help_option,bool server_option,std::string port_option,
         Socket local = client::setupSocket("0.0.0.0",client_option,port,&*aux);
         if(*aux == SUCCESS) {
             handleSignals();
-            client::startClient(&local,&sinRemote);
+            client::startClient(&local);
         }
     }
 }
-
-/*===============================================================
- * End of Thread's domain
- *===============================================================
- */
 
 int main(int argc, char* argv[]){
 
