@@ -24,7 +24,7 @@ void server::getandSendMessage(std::atomic<bool>& endOfLoop)
             message_text.copy(message.text, sizeof(message.text) - 1, 0);
             message.text[message_text.length()] = '\0';
             std::unique_lock<std::mutex> lock(clients_mutex);
-            server::sendAll(message);
+            server::sendAll(message,std::this_thread::get_id());
             lock.unlock();
 
         }
@@ -60,12 +60,8 @@ void server::receiveAndShowMessage()
         message.text[1023] = '\0';
         std::unique_lock<std::mutex> lock(clients_mutex);
         std::cout << " sent: '" << message.text << "'" << std::endl;
-        server::sendAll(message);
+        server::sendAll(message,std::this_thread::get_id());
         lock.unlock();
-
-        //All of them will try to display the same time.
-        //how to make safe cout?
-
     }
 
 }
@@ -167,11 +163,11 @@ void server::startServer(TCPServer *local)
     //to close the sockets while they're reading?
 }
 
-//The resources have been locked before, so we can
-void server::sendAll(const Message& message)
+//The resources have been locked before, so we can send all
+void server::sendAll(const Message& message, std::thread::id senderId)
 {
-    //C++ is like fucking awesome
     for(auto &it1 : clients_) {
-        it1.second.sendTo(message);
+        if (it1.first != senderId)
+            it1.second.sendTo(message);
     }
 }
