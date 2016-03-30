@@ -15,7 +15,11 @@ void handleSignals() {
 
 void displayHelp()
 {
-    std::cout << "I'm helping!" << std::endl;
+    std::cout << "Usage mode: " << std::endl
+              << "-h: Display this message " << std::endl
+              << "-s: Enter server mode" << std::endl
+              << "-c IP: Connect to that ip " << std::endl
+              << "-p PORT: listen/connect on port" << std::endl;
 }
 
 void parseArguments(bool help_option,bool server_option,std::string port_option,
