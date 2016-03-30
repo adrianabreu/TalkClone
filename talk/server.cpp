@@ -58,8 +58,11 @@ void server::receiveAndShowMessage()
         socket.receiveFrom(message);
 
         message.text[1023] = '\0';
-
+        std::unique_lock<std::mutex> lock(clients_mutex);
         std::cout << " sent: '" << message.text << "'" << std::endl;
+        server::sendAll(message);
+        lock.unlock();
+
         //All of them will try to display the same time.
         //how to make safe cout?
 
