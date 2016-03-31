@@ -12,43 +12,6 @@ sockaddr_in makeIpAddress(const std::string& ip_address, int port){
     return tmp;
 }
 
-Socket::Socket()
-{
-    /*
-     * We have to initialize the file descriptor to a non
-     * valid value
-     */
-    fd_ = -1;
-}
-
-Socket::Socket(int tempfd)
-{
-    fd_ = tempfd;
-}
-
-Socket::Socket(const std::string& localIpAddress,
-               const std::string& remoteIpAddress,
-               int remotePort)
-{
-    Socket::normalSocket(makeIpAddress(localIpAddress, 0));
-    sockaddr_in remote = makeIpAddress(remoteIpAddress, remotePort);
-    int result = connect(fd_,reinterpret_cast<const sockaddr*>(&remote),
-                         sizeof(remote));
-
-    if (result < 0) {
-        std::cout << "Couldn't connect to remote host " << remoteIpAddress
-                  << std::endl;
-    } else {
-        std::cout << "Connected to " << inet_ntoa(remote.sin_addr) << std::endl;
-    }
-}
-
-
-Socket::Socket(const Socket& older)
-{
-    fd_=older.getFd();
-}
-
 void Socket::normalSocket(const sockaddr_in& address)
 {
     // Create local socket
@@ -65,6 +28,40 @@ void Socket::normalSocket(const sockaddr_in& address)
     if ( result < 0 )
         throw std::system_error(errno, std::system_category(),"bind error: ");
 
+}
+
+Socket::Socket()
+{
+    //We have to initialize the file descriptor to a non valid value
+    fd_ = -1;
+}
+
+Socket::Socket(int tempfd)
+{
+    fd_ = tempfd;
+}
+
+Socket::Socket(const std::string& localIpAddress,
+               const std::string& remoteIpAddress, int remotePort)
+{
+    Socket::normalSocket(makeIpAddress(localIpAddress, 0));
+    sockaddr_in remote = makeIpAddress(remoteIpAddress, remotePort);
+    int result = connect(fd_,reinterpret_cast<const sockaddr*>(&remote),
+                         sizeof(remote));
+
+    if (result < 0) {
+        std::cout << "Couldn't connect to remote host " << remoteIpAddress
+                  << std::endl;
+    } else {
+        std::cout << "Connected to " << inet_ntoa(remote.sin_addr)
+                  << std::endl;
+    }
+}
+
+
+Socket::Socket(const Socket& older)
+{
+    fd_=older.getFd();
 }
 
 Socket::~Socket()
@@ -85,7 +82,8 @@ void Socket::setFd(int newFd)
 
 void Socket::sendTo(const Message& message)
 {
-    int result = write(fd_, static_cast<const void*>(&message), sizeof(message));
+    int result = write(fd_, static_cast<const void*>(&message),
+                       sizeof(message));
 
     if ( result < 0 ) {
         std::cout << "Your partner has diconnected" << std::endl;
@@ -95,18 +93,19 @@ void Socket::sendTo(const Message& message)
 
 void Socket::receiveFrom(Message& message)
 {
-    //Deal with incomplete messages
+    //Has to be int for errors
     int result = 0;
-    while(result < sizeof(message)) {
+    while(result < sizeof(message)) { //For dealing with incompleted messages
         result = read(fd_,static_cast<void*>(&message), sizeof(message));
 
-        if (result < 0)
+        if (result < 0) {
             throw std::system_error(errno, std::system_category(),
                                     "read error: ");
-
-        if (result == 0) //If read = 0, socket was closed
+        } else if (result == 0) {
+            //If read = 0, socket was closed
             throw std::system_error(errno, std::system_category(),
                                     "Connection was over: ");
+        }
     }
 }
 

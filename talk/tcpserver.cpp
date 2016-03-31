@@ -3,7 +3,8 @@
 TCPServer::TCPServer() {}
 
 TCPServer::TCPServer(const TCPServer& older) : Socket()
-{ //If you do not call socket, a warning is launched
+{
+    //If you do not call socket, a warning is launched
     fd_ = older.getFd();
 }
 

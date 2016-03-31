@@ -29,7 +29,7 @@ void client::getandSendMessage(Socket *local,std::atomic<bool>& endOfLoop,
 
 }
 
-void client::firsThread(Socket& local,std::atomic<bool>& endOfLoop,
+void client::sendThread(Socket& local,std::atomic<bool>& endOfLoop,
                         const std::string& userName)
 {
     try {
@@ -61,7 +61,7 @@ void client::receiveAndShowMessage(Socket *socket)
 
 }
 
-void client::secondThread(Socket& local, std::atomic<bool>& endOfLoop)
+void client::recvThread(Socket& local, std::atomic<bool>& endOfLoop)
 {
     try {
         client::receiveAndShowMessage(&local);
@@ -112,10 +112,10 @@ void client::startClient(Socket *local,const std::string& userName)
         << std::endl;
     }
 
-    std::thread hilo1(&firsThread,std::ref(*local),
+    std::thread sender(&sendThread,std::ref(*local),
                       std::ref(endOfLoop),std::ref(userName));
 
-    std::thread hilo2(&secondThread,std::ref(*local),
+    std::thread receiver(&recvThread,std::ref(*local),
                       std::ref(endOfLoop));
 
     //Now we unblock the signals on the main thread
@@ -129,6 +129,6 @@ void client::startClient(Socket *local,const std::string& userName)
     while(!endOfLoop)
         usleep(25000);
     //We must finish both threads gracefully!
-    requestCancellation(hilo1);
-    requestCancellation(hilo2);
+    requestCancellation(sender);
+    requestCancellation(receiver);
 }

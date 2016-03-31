@@ -1,6 +1,6 @@
 #ifndef HELPSIGNALSTHREADS_H
 #define HELPSIGNALSTHREADS_H
-#pragma once
+
 #include <thread>
 #include <pthread.h>
 #include <csignal>
@@ -17,7 +17,7 @@ extern std::atomic<bool> endOfLoop;
  * server and client side.
  */
 
-//Signal helping
+//Signal help
 void int_signal_handler(int signum);
 void setSigMask(int sigAction);
 

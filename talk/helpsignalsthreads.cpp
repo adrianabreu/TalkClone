@@ -23,6 +23,7 @@ void setSigMask(int sigAction)
     //If we block all signals the inherited thread will block them also
     sigset_t set;
     sigfillset(&set);
+
     int res = pthread_sigmask(sigAction, &set, nullptr);
     if ( res != 0 )
         throw std::system_error(errno, std::system_category(),

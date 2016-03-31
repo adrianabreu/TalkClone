@@ -47,30 +47,26 @@ void parseArguments(bool help_option,bool server_option,std::string port_option,
     } else {
         const char* systemUser = std::getenv("USER");
 
-        if (systemUser != nullptr)
+        if (systemUser != nullptr) {
             userName.assign(systemUser);
-
-        //Else what? We don't create the socket¿ we can finish with the aux
-        //shall we?
-    }
-
-    if (server_option) {
-
-        TCPServer local = server::setupServer("0.0.0.0",port,*&aux);
-        if(*aux == SUCCESS) {
-            handleSignals();
-            server::startServer(&local, userName);
+        } else {
+            userName.assign("Unknown");
         }
     }
-    else if (client_option != "") { //Server are also clients so servers
-                                    //have priority
+
+    handleSignals();
+
+    if (server_option) {
+        TCPServer local = server::setupServer("0.0.0.0",port,*&aux);
+        if(*aux == SUCCESS) {
+            server::startServer(&local, userName);
+    } else if (client_option != "") {
+        //Server are also clients so servers have priority
         if (port != 0) {
             Socket local = client::setupSocket("0.0.0.0",client_option,port,
                                                &*aux);
-            if(*aux == SUCCESS) {
-                handleSignals();
+            if(*aux == SUCCESS)
                 client::startClient(&local, userName);
-            }
         } else {
             std::cout << "Please, specify the remote port to connect to"
                       << std::endl;

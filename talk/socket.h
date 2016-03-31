@@ -47,7 +47,6 @@ public:
     void receiveFrom(Message& message);
 
     Socket& operator=(Socket&& older);
-    Socket& operator=(Socket& older);
 };
 
 #endif // SOCKET_H
