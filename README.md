@@ -16,19 +16,39 @@
    make
    ``` 
 
-   
+## What's new on Talk 1.0? :
+
+* The whole code have been redistributed.
+* A server mode have been implemented.
+* Now messages are send to the multiple users connected to the same server.
+* Support to terminal arguments.
+* Usernames allowed.
+* Signal handling.
+
+## Arguments for launching :
+
+The program now requires of bash arguments, please check them below:
+
+* **-h --help**
+  Display help message.
+* **-s --server**
+  Enter server mode.
+* **-c --client IP**
+  Enter client mode and connect that ip (port required).
+* **-p --port PORT**
+  Specify port for listening / connecting.
+* **-u --user USER**
+  Specify sender's name.
+
+
 ## Basic test:
-   This chat is prepared for being tested locally. For making the basics tests, two constans have been defined **LOCALPORT** y **REMOTEPORT**.
 
-   Two versions of the program must be compiled with ports inverted.
+If you want to test it locally just follow this steps:
 
-   Examples:
-   
-      Program 1: LOCALPORT 3000 REMOTEPORT 4000
-
-      Program 2: LOCALPORT 4000 REMOTEPORT 3000
-
-   Now we can execute both programs and check if everything goes right.
+1. Compile the program.
+1. Launch an instance in server mode and listen to a free port (**./ talk -s -p 8000**).
+1. Launch another instance in client mode with ip 127.0.0.1 and the same port (**-c 127.0.0.1 -p 8000**).
+1. Start messaging!
 
 ## Features:
 
@@ -36,11 +56,31 @@
 2. The communication is TCP.
 3. The messages' structures are, by now, just strings.
 4. Communication is also asynchronous due to the use of threads.
-5. The program will enter into server mode if can't connect to remote.
+5. You can host your own server, and all the users connected to you will see all the messages.
+6. Usernames are allowed!
+7. Also supports system's signals (sigterm, sighup...).
 
 ## Usage:
-1. Open the program, it will try to connect, if it is not possible, it will print a message as it waits for incoming connections.
-2. When connected, sending messages is easy as writting them and pressing enter.
-3. If another user sends the message, it will be printed on the screen after the ip of the user who sent it.
+
+### I want to be the server:
+1. Compile.
+2. Execute talk with **-s**.
+3. Tell your friends your IP and the port talk showed on the screen.
+4. Talk with every one.
 4. For existing just write `/quit` or press `CTRL+D`.
 
+### I want to be the client:
+1. Compile.
+2. Execute talk with the IP and the PORT your friend told you. **-c IP -p PORT**.
+3. Talk with every one!
+4. For exiting just write `/quit` or press `CTRL+D`.
+
+### What is that username?:
+If you didn't specified your username with **-u USERNAME** when launching talk, 
+it will be the one on your $USER environment variable.
+
+### What if I forget any command?:
+Feel free to check it on **-h --help**
+
+### Are messages encrypted?:
+No, I'm following whatsapp babysteps.
