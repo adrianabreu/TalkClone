@@ -4,6 +4,7 @@
 #include "server.h"
 #include "helpsignalsthreads.h"
 
+#include <getopt.h>
 #include <cstdlib>
 
 #define LOCALPORT 5500
@@ -21,11 +22,11 @@ void handleSignals()
 void displayHelp()
 {
     std::cout << "Usage mode: " << std::endl
-              << "-h: Display this message " << std::endl
-              << "-s: Enter server mode" << std::endl
-              << "-c IP: Connect to that ip " << std::endl
-              << "-p PORT: listen/connect on port" << std::endl
-              << "-u USER: select sender name" << std::endl;
+              << "-h --help: Display this message " << std::endl
+              << "-s --server: Enter server mode" << std::endl
+              << "-c --client IP: Connect to that ip " << std::endl
+              << "-p --port PORT: listen/connect on port" << std::endl
+              << "-u --user USER: select sender name" << std::endl;
 }
 
 void parseArguments(bool help_option,bool server_option,std::string port_option,
@@ -63,10 +64,16 @@ void parseArguments(bool help_option,bool server_option,std::string port_option,
     }
     else if (client_option != "") { //Server are also clients so servers
                                     //have priority
-        Socket local = client::setupSocket("0.0.0.0",client_option,port,&*aux);
-        if(*aux == SUCCESS) {
-            handleSignals();
-            client::startClient(&local, userName);
+        if (port != 0) {
+            Socket local = client::setupSocket("0.0.0.0",client_option,port,
+                                               &*aux);
+            if(*aux == SUCCESS) {
+                handleSignals();
+                client::startClient(&local, userName);
+            }
+        } else {
+            std::cout << "Please, specify the remote port to connect to"
+                      << std::endl;
         }
     }
 }
@@ -79,8 +86,19 @@ int main(int argc, char* argv[]){
     std::string client_option;
     std::string user_option;
 
+    static struct option long_options[] =
+    {
+        {"help", no_argument, 0, 'h'},
+        {"server", no_argument, 0, 's'},
+        {"client", required_argument, 0,'c'},
+        {"port", required_argument, 0, 'p' },
+        {"user", required_argument, 0, 'u'}
+    };
+
+    int option_index = 0;
     int c;
-    while ((c = getopt(argc, argv, "hsc:p:u:")) != -1) {
+    while ((c = getopt_long(argc, argv, "hsc:p:u:",long_options,
+                            &option_index)) != -1) {
         switch (c) {
             case 'h':
                 help_option = 1;
