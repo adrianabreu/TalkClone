@@ -10,16 +10,22 @@
  */
 namespace server {
     TCPServer setupServer(const std::string& ipAdress, int port, int* aux);
-     //launches a thread that will keep on accept
+    void startServer(TCPServer *local,const std::string& userName);
+
+    //launches a thread that will keep on accept
     void threadListen(TCPServer* local);
+    //The first thread gets the message from input and send it
+
+    void getandSendMessage(std::atomic<bool>& endOfLoop,
+                           const std::string& userName);
+    void firstThread(std::atomic<bool>& endOfLoop,
+                     const std::string& userName);
+
     //function for each children thread
     void threadReceive(int& tempfd);
     void receiveAndShowMessage();
-    void startServer(TCPServer *local); //main program
+
     void sendAll(const Message& message, std::thread::id senderId);
-    //The first thread gets the message from input and send it
-    void getandSendMessage(std::atomic<bool>& endOfLoop);
-    void firstThread(std::atomic<bool>& endOfLoop);
     void shutdown();
 }
 #endif // SERVER_H

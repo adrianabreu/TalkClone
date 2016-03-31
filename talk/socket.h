@@ -15,7 +15,7 @@
 
 // Messages structure
 struct Message {
-
+    char username[16];
     char text[1024];
 
 };

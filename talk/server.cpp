@@ -7,7 +7,8 @@ std::map<std::thread::id,Socket> clients_; //List of sockets clients,
 
 std::mutex clients_mutex;
 
-void server::getandSendMessage(std::atomic<bool>& endOfLoop)
+void server::getandSendMessage(std::atomic<bool>& endOfLoop,
+                               const std::string& userName)
 {
     //We should ead until read quit or eof
     Message message;
@@ -19,6 +20,8 @@ void server::getandSendMessage(std::atomic<bool>& endOfLoop)
             endOfLoop = true;
 
         if (!endOfLoop) {
+            userName.copy(message.username,sizeof(message.username) - 1 ,0);
+            message.username[userName.length()] = '\0';
             message_text.copy(message.text, sizeof(message.text) - 1, 0);
             message.text[message_text.length()] = '\0';
             std::unique_lock<std::mutex> lock(clients_mutex);
@@ -30,10 +33,11 @@ void server::getandSendMessage(std::atomic<bool>& endOfLoop)
 
 }
 
-void server::firstThread(std::atomic<bool>& endOfLoop)
+void server::firstThread(std::atomic<bool>& endOfLoop,
+                         const std::string& userName)
 {
     try {
-        getandSendMessage(endOfLoop);
+        getandSendMessage(endOfLoop,userName);
     } catch (std::system_error& e) {
         std::cerr << program_invocation_name << ": " << e.what()
         << std::endl;
@@ -52,10 +56,12 @@ void server::receiveAndShowMessage()
 
     while(1) {
         socket.receiveFrom(message);
-
+        message.username[15]= '\0';
         message.text[1023] = '\0';
+
         std::unique_lock<std::mutex> lock(clients_mutex);
-        std::cout << " sent: '" << message.text << "'" << std::endl;
+        std::cout << message.username << " sent: '" << message.text << "'"
+                  << std::endl;
         server::sendAll(message,std::this_thread::get_id());
         lock.unlock();
     }
@@ -124,7 +130,7 @@ TCPServer server::setupServer(const std::string& ipLocal, int port, int* aux)
     return local;
 }
 
-void server::startServer(TCPServer *local)
+void server::startServer(TCPServer *local,const std::string& userName)
 {
     //We have to block the signals on the children
     try {
@@ -135,10 +141,11 @@ void server::startServer(TCPServer *local)
     }
 
     //We will launch a thread for listen for connections
-    std::thread hilo1(&server::threadListen,std::ref(local));
+    std::thread hilo1(&server::threadListen, std::ref(local));
 
     //We will now launch a thread for getting user input
-    std::thread hilo2(&server::firstThread, std::ref(endOfLoop));
+    std::thread hilo2(&server::firstThread, std::ref(endOfLoop),
+                      std::ref(userName));
 
     //Now we unblock the signals on the main thread
     try {

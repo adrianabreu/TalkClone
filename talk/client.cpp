@@ -6,7 +6,8 @@
  * Thread's domain
  * ==================================================
  */
-void client::getandSendMessage(Socket *local,std::atomic<bool>& endOfLoop)
+void client::getandSendMessage(Socket *local,std::atomic<bool>& endOfLoop,
+                               const std::string& userName)
 {
     //We should ead until read quit or eof
     Message message;
@@ -18,6 +19,8 @@ void client::getandSendMessage(Socket *local,std::atomic<bool>& endOfLoop)
             endOfLoop = true;
 
         if (!endOfLoop) {
+            userName.copy(message.username,sizeof(message.username) - 1 ,0);
+            message.username[userName.length()] = '\0';
             message_text.copy(message.text, sizeof(message.text) - 1, 0);
             message.text[message_text.length()] = '\0';
             local->sendTo(message);
@@ -26,10 +29,11 @@ void client::getandSendMessage(Socket *local,std::atomic<bool>& endOfLoop)
 
 }
 
-void client::firsThread(Socket& local,std::atomic<bool>& endOfLoop)
+void client::firsThread(Socket& local,std::atomic<bool>& endOfLoop,
+                        const std::string& userName)
 {
     try {
-        getandSendMessage(&local,endOfLoop);
+        getandSendMessage(&local,endOfLoop,userName);
     } catch (std::system_error& e) {
         std::cerr << program_invocation_name << ": " << e.what()
         << std::endl;
@@ -49,8 +53,10 @@ void client::receiveAndShowMessage(Socket *socket)
          * the lecture to the size of the buffer, maybe the message
          * its not delimited by default.
          */
+        message.username[15]= '\0';
         message.text[1023] = '\0';
-        std::cout << " sent: '" << message.text << "'" << std::endl;
+        std::cout << message.username << " sent: '" << message.text << "'"
+                  << std::endl;
     }
 
 }
@@ -96,7 +102,7 @@ Socket client::setupSocket(const std::string& ipLocal,
 }
 
 
-void client::startClient(Socket *local)
+void client::startClient(Socket *local,const std::string& userName)
 {
     //We have to block the signals on the children
     try {
@@ -107,7 +113,7 @@ void client::startClient(Socket *local)
     }
 
     std::thread hilo1(&firsThread,std::ref(*local),
-                      std::ref(endOfLoop));
+                      std::ref(endOfLoop),std::ref(userName));
 
     std::thread hilo2(&secondThread,std::ref(*local),
                       std::ref(endOfLoop));
