@@ -58,7 +58,7 @@ void parseArguments(bool help_option,bool server_option,std::string port_option,
 
     if (server_option) {
         TCPServer local = server::setupServer("0.0.0.0",port,*&aux);
-        if(*aux == SUCCESS) {
+        if(*aux == SUCCESS)
             server::startServer(&local, userName);
     } else if (client_option != "") {
         //Server are also clients so servers have priority

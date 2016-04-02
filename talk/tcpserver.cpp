@@ -23,15 +23,19 @@ TCPServer::TCPServer(const std::string& ip_address, int port)
     normalSocket(address);
     int result = listen(fd_, 5);
 
-    if (result < 0)
+    if (result < 0) {
         throw std::system_error(errno, std::system_category(),
                                 "listen error");
-    else {
+    } else {
         socklen_t add_len = sizeof(address);
-        getsockname(fd_,reinterpret_cast<sockaddr*>(&address),
+        result = getsockname(fd_,reinterpret_cast<sockaddr*>(&address),
                 &add_len);
-        std::cout << "Entering server mode... Listening on " <<
+        if (result == 0)
+            std::cout << "Entering server mode... Listening on " <<
                       ntohs(address.sin_port) << std::endl;
+        else
+            throw std::system_error(errno, std::system_category(),
+                                    "couldn't get listen port info");
     }
 }
 
@@ -45,9 +49,6 @@ int TCPServer::handleConnections(sockaddr_in *remote)
         throw std::system_error(errno, std::system_category(),
                                 " Error on accept");
     } else {
-        //std::cout << "Remote user: " << inet_ntoa(remote->sin_addr)
-        //        << " has connected from port " << ntohs(remote->sin_port)
-        //          << std::endl;
         aux = tempfd;
     }
     return aux; //We return the new socket

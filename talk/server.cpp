@@ -104,7 +104,6 @@ void server::listenThread(TCPServer *local)
 {
     while(!endOfLoop) {
         try {
-
             sockaddr_in sinRemote = {};
             int tempfd = local->handleConnections(&sinRemote);
             auto mythread = std::thread(&threadReceive,std::ref(tempfd));
@@ -129,7 +128,6 @@ void server::threadReceive(int& tempfd)
 
     } catch (std::system_error& e) {
         //Probably connection over
-        //lock resource - delete your socket - unlock - eraseyourself?
         std::unique_lock<std::mutex> lock(clients_mutex);
         clients_.erase(std::this_thread::get_id());
         lock.unlock();
@@ -162,9 +160,13 @@ void server::receiveAndShowMessage()
 void server::sendAll(const Message& message, std::thread::id senderId)
 {
     //The resources have been locked before, so we can send now
-    for(auto &it1 : clients_) {
-        if (it1.first != senderId)
-            it1.second.sendTo(message);
-        //We should make a try - catch block here
+    try {
+        for(auto &it1 : clients_) {
+            if (it1.first != senderId)
+                it1.second.sendTo(message);
+        }
+    } catch (std::system_error& e) {
+        std::cerr << program_invocation_name << ": " << e.what()
+        << std::endl;
     }
 }
