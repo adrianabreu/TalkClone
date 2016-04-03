@@ -9,8 +9,8 @@
 /*We have to use the vector threads as global for making each
  * thread able of deleting itself when his job is done.
  */
-extern std::mutex clientsSocketsMutex;
-extern std::list<std::thread> clientsThreads;
+extern std::list<std::thread> listThreads; //Threads created for listen to clients
+extern std::mutex listThreadsMutex;
 
 /*
  * This class does the basic server stuff,

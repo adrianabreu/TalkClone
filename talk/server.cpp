@@ -4,10 +4,11 @@
 #include <list>
 #include <map>
 
-std::map<std::thread::id,Socket> clientsSockets; //List of sockets clients,
-std::mutex clientsSocketsMutex;
-std::list<std::thread> clientsThreads; //Threads created for listen to clients
-std::thread auxThread; //For self erasing from list
+std::map<std::thread::id,Socket> hashSockets; //List of sockets clients,
+std::mutex hashSocketsMutex;
+
+std::list<std::thread> listThreads; //Threads created for listen to clients
+std::mutex listThreadsMutex;
 
 TCPServer server::setupServer(const std::string& ipLocal, int port, int* aux)
 {
@@ -61,7 +62,7 @@ void server::startServer(TCPServer *local,const std::string& userName)
     //We must close all the sockets and finish all the threads
     requestCancellation(listener);
     requestCancellation(sender);
-    server::clearClientsThreads();
+    server::clearListThreads();
 }
 
 
@@ -82,7 +83,7 @@ void server::getandSendMessage(std::atomic<bool>& endOfLoop,
             message_text.copy(message.text, sizeof(message.text) - 1, 0);
             message.text[message_text.length()] = '\0';
 
-            std::unique_lock<std::mutex> lock(clientsSocketsMutex);
+            std::unique_lock<std::mutex> lock(hashSocketsMutex);
             server::sendAll(message,std::this_thread::get_id());
             lock.unlock();
 
@@ -111,6 +112,7 @@ void server::listenThread(TCPServer *local)
             sockaddr_in sinRemote = {};
             int tempfd = local->handleConnections(&sinRemote);
             auto mythread = std::thread(&threadReceive,std::ref(tempfd));
+            //mythread.join();
             local->pushThread(mythread);
 
         } catch (std::system_error& e) {
@@ -125,26 +127,27 @@ void server::threadReceive(int& tempfd)
 {
     try {
         //lock resource - create socket - unlock resource - read socket!
-        std::unique_lock<std::mutex> lock(clientsSocketsMutex);
-        clientsSockets[std::this_thread::get_id()] = Socket(tempfd);
+        std::unique_lock<std::mutex> lock(hashSocketsMutex);
+        hashSockets[std::this_thread::get_id()] = Socket(tempfd);
         lock.unlock();
         server::receiveAndShowMessage();
 
     } catch (std::system_error& e) {
         //Probably connection over
-        std::unique_lock<std::mutex> lock(clientsSocketsMutex);
-        clientsSockets.erase(std::this_thread::get_id());
+        std::unique_lock<std::mutex> lock(hashSocketsMutex);
+        hashSockets.erase(std::this_thread::get_id());
         auto this_id = std::this_thread::get_id();
-        auto this_iterator = clientsThreads.begin();
-        for (auto it1 = clientsThreads.begin();
-             it1 != clientsThreads.end(); ++it1) {
+        auto this_iterator = listThreads.begin();
+        for (auto it1 = listThreads.begin();
+             it1 != listThreads.end(); ++it1) {
             if (it1->get_id() == this_id) {
-                auxThread = std::move(*it1);
+                auto auxThread = std::move(*it1);
+                auxThread.detach();
                 this_iterator = it1;
             }
         }
 
-        clientsThreads.erase(this_iterator);
+        listThreads.erase(this_iterator);
 
         lock.unlock();
     }
@@ -155,8 +158,8 @@ void server::receiveAndShowMessage()
 {
     Message message;
 
-    std::unique_lock<std::mutex> lock(clientsSocketsMutex);
-    Socket socket = clientsSockets[std::this_thread::get_id()];
+    std::unique_lock<std::mutex> lock(hashSocketsMutex);
+    Socket socket = hashSockets[std::this_thread::get_id()];
     lock.unlock();
 
     while(1) {
@@ -164,7 +167,7 @@ void server::receiveAndShowMessage()
             message.username[15]= '\0';
             message.text[1023] = '\0';
 
-            std::unique_lock<std::mutex> lock(clientsSocketsMutex);
+            std::unique_lock<std::mutex> lock(hashSocketsMutex);
             std::cout << message.username << " sent: '" << message.text << "'"
                       << std::endl;
             server::sendAll(message,std::this_thread::get_id());
@@ -177,7 +180,7 @@ void server::sendAll(const Message& message, std::thread::id senderId)
 {
     //The resources have been locked before, so we can send now
 
-    for(auto &it1 : clientsSockets) {
+    for(auto &it1 : hashSockets) {
         if (it1.first != senderId) {
             try {
                 it1.second.sendTo(message);
@@ -190,9 +193,9 @@ void server::sendAll(const Message& message, std::thread::id senderId)
 
 }
 
-void server::clearClientsThreads()
+void server::clearListThreads()
 {
     //All the threads we have created must be destroyed
-    for(auto &it1 : clientsThreads)
+    for(auto &it1 : listThreads)
         requestCancellation(it1);
 }
