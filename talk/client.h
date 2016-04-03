@@ -8,7 +8,7 @@
  * and threads launched
  */
 namespace client {
-    //If the new socket is not created correctly, aux will indicate it
+    //If the newadd socket is not created correctly, aux will indicate it
     Socket setupSocket(const std::string& sinLocal,const std::string& sinRemote,
                        int port, int *aux);
     void startClient(Socket *local, const std::string& userName);

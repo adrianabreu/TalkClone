@@ -30,6 +30,6 @@ namespace server {
     // Messages should be sent to everyone except the sender
     void sendAll(const Message& message, std::thread::id senderId);
 
-    void shutdown();
+    void clearClientsThreads();
 }
 #endif // SERVER_H

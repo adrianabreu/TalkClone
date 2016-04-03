@@ -12,9 +12,6 @@ TCPServer::~TCPServer()
 {
     //We have to close our socket
     close(fd_);
-    //All the threads we have created must be destroyed
-    for(unsigned int i = 0; i < threads_.size(); ++i)
-        requestCancellation(threads_[i]);
 }
 
 TCPServer::TCPServer(const std::string& ip_address, int port)
@@ -56,8 +53,10 @@ int TCPServer::handleConnections(sockaddr_in *remote)
 
 void TCPServer::pushThread(std::thread& mythread)
 {
-    threads_.push_back(std::move(mythread));
-
+    //We have to lock the resource for if a thread it's deleting itself
+    std::unique_lock<std::mutex> lock(clientsSocketsMutex);
+    clientsThreads.push_back(std::move(mythread));
+    lock.unlock();
 }
 
 TCPServer& TCPServer::operator =(TCPServer&& older)

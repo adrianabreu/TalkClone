@@ -3,7 +3,14 @@
 #define TCPSERVER_H
 #include "socket.h"
 #include "helpsignalsthreads.h"
-#include <vector>
+#include <list>
+#include <mutex>
+
+/*We have to use the vector threads as global for making each
+ * thread able of deleting itself when his job is done.
+ */
+extern std::mutex clientsSocketsMutex;
+extern std::list<std::thread> clientsThreads;
 
 /*
  * This class does the basic server stuff,
@@ -12,8 +19,6 @@
 
 class TCPServer : public Socket
 {
-private:
-    std::vector<std::thread> threads_;
 
 public:
     TCPServer();

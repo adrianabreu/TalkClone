@@ -1,10 +1,13 @@
 #include "server.h"
 #include <mutex>
 #include <thread>
+#include <list>
 #include <map>
 
-std::map<std::thread::id,Socket> clients_; //List of sockets clients,
-std::mutex clients_mutex;
+std::map<std::thread::id,Socket> clientsSockets; //List of sockets clients,
+std::mutex clientsSocketsMutex;
+std::list<std::thread> clientsThreads; //Threads created for listen to clients
+std::thread auxThread; //For self erasing from list
 
 TCPServer server::setupServer(const std::string& ipLocal, int port, int* aux)
 {
@@ -58,6 +61,7 @@ void server::startServer(TCPServer *local,const std::string& userName)
     //We must close all the sockets and finish all the threads
     requestCancellation(listener);
     requestCancellation(sender);
+    server::clearClientsThreads();
 }
 
 
@@ -78,7 +82,7 @@ void server::getandSendMessage(std::atomic<bool>& endOfLoop,
             message_text.copy(message.text, sizeof(message.text) - 1, 0);
             message.text[message_text.length()] = '\0';
 
-            std::unique_lock<std::mutex> lock(clients_mutex);
+            std::unique_lock<std::mutex> lock(clientsSocketsMutex);
             server::sendAll(message,std::this_thread::get_id());
             lock.unlock();
 
@@ -121,15 +125,27 @@ void server::threadReceive(int& tempfd)
 {
     try {
         //lock resource - create socket - unlock resource - read socket!
-        std::unique_lock<std::mutex> lock(clients_mutex);
-        clients_[std::this_thread::get_id()] = Socket(tempfd);
+        std::unique_lock<std::mutex> lock(clientsSocketsMutex);
+        clientsSockets[std::this_thread::get_id()] = Socket(tempfd);
         lock.unlock();
         server::receiveAndShowMessage();
 
     } catch (std::system_error& e) {
         //Probably connection over
-        std::unique_lock<std::mutex> lock(clients_mutex);
-        clients_.erase(std::this_thread::get_id());
+        std::unique_lock<std::mutex> lock(clientsSocketsMutex);
+        clientsSockets.erase(std::this_thread::get_id());
+        auto this_id = std::this_thread::get_id();
+        auto this_iterator = clientsThreads.begin();
+        for (auto it1 = clientsThreads.begin();
+             it1 != clientsThreads.end(); ++it1) {
+            if (it1->get_id() == this_id) {
+                auxThread = std::move(*it1);
+                this_iterator = it1;
+            }
+        }
+
+        clientsThreads.erase(this_iterator);
+
         lock.unlock();
     }
 }
@@ -139,20 +155,20 @@ void server::receiveAndShowMessage()
 {
     Message message;
 
-    std::unique_lock<std::mutex> lock(clients_mutex);
-    Socket socket = clients_[std::this_thread::get_id()];
+    std::unique_lock<std::mutex> lock(clientsSocketsMutex);
+    Socket socket = clientsSockets[std::this_thread::get_id()];
     lock.unlock();
 
     while(1) {
-        socket.receiveFrom(message);
-        message.username[15]= '\0';
-        message.text[1023] = '\0';
+            socket.receiveFrom(message);
+            message.username[15]= '\0';
+            message.text[1023] = '\0';
 
-        std::unique_lock<std::mutex> lock(clients_mutex);
-        std::cout << message.username << " sent: '" << message.text << "'"
-                  << std::endl;
-        server::sendAll(message,std::this_thread::get_id());
-        lock.unlock();
+            std::unique_lock<std::mutex> lock(clientsSocketsMutex);
+            std::cout << message.username << " sent: '" << message.text << "'"
+                      << std::endl;
+            server::sendAll(message,std::this_thread::get_id());
+            lock.unlock();
     }
 
 }
@@ -160,13 +176,23 @@ void server::receiveAndShowMessage()
 void server::sendAll(const Message& message, std::thread::id senderId)
 {
     //The resources have been locked before, so we can send now
-    try {
-        for(auto &it1 : clients_) {
-            if (it1.first != senderId)
+
+    for(auto &it1 : clientsSockets) {
+        if (it1.first != senderId) {
+            try {
                 it1.second.sendTo(message);
+            } catch (std::system_error& e) {
+                std::cerr << program_invocation_name << ": " << e.what()
+                << std::endl;
+            }
         }
-    } catch (std::system_error& e) {
-        std::cerr << program_invocation_name << ": " << e.what()
-        << std::endl;
     }
+
+}
+
+void server::clearClientsThreads()
+{
+    //All the threads we have created must be destroyed
+    for(auto &it1 : clientsThreads)
+        requestCancellation(it1);
 }
