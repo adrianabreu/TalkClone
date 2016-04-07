@@ -54,9 +54,11 @@ int TCPServer::handleConnections(sockaddr_in *remote)
 void TCPServer::pushThread(std::thread& mythread)
 {
     //We have to lock the resource for if a thread it's deleting itself
+    //Calling functions will handle exceptions from mutex lock
     std::unique_lock<std::mutex> lock(listThreadsMutex);
     listThreads.push_back(std::move(mythread));
     lock.unlock();
+
 }
 
 TCPServer& TCPServer::operator =(TCPServer&& older)

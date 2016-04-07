@@ -7,9 +7,6 @@
 #include <getopt.h>
 #include <cstdlib>
 
-#define LOCALPORT 5500
-#define REMOTEPORT 6000
-
 std::atomic<bool> endOfLoop(false);
 
 void handleSignals()

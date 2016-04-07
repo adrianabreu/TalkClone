@@ -112,7 +112,6 @@ void server::listenThread(TCPServer *local)
             sockaddr_in sinRemote = {};
             int tempfd = local->handleConnections(&sinRemote);
             auto mythread = std::thread(&threadReceive,std::ref(tempfd));
-            //mythread.join();
             local->pushThread(mythread);
 
         } catch (std::system_error& e) {
@@ -131,25 +130,24 @@ void server::threadReceive(int& tempfd)
         hashSockets[std::this_thread::get_id()] = Socket(tempfd);
         lock.unlock();
         server::receiveAndShowMessage();
-
     } catch (std::system_error& e) {
         //Probably connection over
         std::unique_lock<std::mutex> lock(hashSocketsMutex);
         hashSockets.erase(std::this_thread::get_id());
-        auto this_id = std::this_thread::get_id();
+        lock.unlock();
+
+        std::unique_lock<std::mutex> lock2(listThreadsMutex);
         auto this_iterator = listThreads.begin();
         for (auto it1 = listThreads.begin();
              it1 != listThreads.end(); ++it1) {
-            if (it1->get_id() == this_id) {
+            if (it1->get_id() == std::this_thread::get_id()) {
                 auto auxThread = std::move(*it1);
                 auxThread.detach();
                 this_iterator = it1;
             }
         }
-
         listThreads.erase(this_iterator);
-
-        lock.unlock();
+        lock2.unlock();
     }
 }
 
@@ -179,7 +177,6 @@ void server::receiveAndShowMessage()
 void server::sendAll(const Message& message, std::thread::id senderId)
 {
     //The resources have been locked before, so we can send now
-
     for(auto &it1 : hashSockets) {
         if (it1.first != senderId) {
             try {
@@ -195,7 +192,13 @@ void server::sendAll(const Message& message, std::thread::id senderId)
 
 void server::clearListThreads()
 {
-    //All the threads we have created must be destroyed
-    for(auto &it1 : listThreads)
-        requestCancellation(it1);
+    try {
+        std::unique_lock<std::mutex> lock(listThreadsMutex);
+        //All the threads we have created must be destroyed
+        for(auto &it1 : listThreads)
+            requestCancellation(it1);
+        lock.unlock();
+    } catch(std::system_error &e) {
+
+    }
 }

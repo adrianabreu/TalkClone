@@ -36,6 +36,7 @@ void setSigMask(int sigAction)
  */
 void requestCancellation(std::thread& oneThread)
 {
+    //exceptions?
     pthread_cancel(oneThread.native_handle());
     oneThread.join();
 }
