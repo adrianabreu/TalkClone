@@ -71,6 +71,7 @@ void server::getandSendMessage(std::atomic<bool>& endOfLoop,
 {
     Message message;
     std::string message_text;
+
     while (! endOfLoop) {
         std::getline(std::cin,message_text);
 
@@ -82,7 +83,9 @@ void server::getandSendMessage(std::atomic<bool>& endOfLoop,
             message.username[userName.length()] = '\0';
             message_text.copy(message.text, sizeof(message.text) - 1, 0);
             message.text[message_text.length()] = '\0';
-
+            std::time_t result = std::time(nullptr);
+            std::strftime(message.time, sizeof(message.time), "%D %T",
+                          std::localtime(&result));
             std::unique_lock<std::mutex> lock(hashSocketsMutex);
             server::sendAll(message,std::this_thread::get_id());
             lock.unlock();
@@ -164,12 +167,13 @@ void server::receiveAndShowMessage()
             socket.receiveFrom(message);
             message.username[15]= '\0';
             message.text[1023] = '\0';
-
+            message.time[25] = '\0';
             std::unique_lock<std::mutex> lock(hashSocketsMutex);
-            std::cout << message.username << " sent: '" << message.text << "'"
-                      << std::endl;
+            std::cout << message.time << " " << message.username << " sent: '"
+                      << message.text << "'" << std::endl;
             server::sendAll(message,std::this_thread::get_id());
             lock.unlock();
+            //%d %T
     }
 
 }

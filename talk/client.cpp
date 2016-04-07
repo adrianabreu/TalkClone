@@ -23,6 +23,9 @@ void client::getandSendMessage(Socket *local,std::atomic<bool>& endOfLoop,
             message.username[userName.length()] = '\0';
             message_text.copy(message.text, sizeof(message.text) - 1, 0);
             message.text[message_text.length()] = '\0';
+            std::time_t result = std::time(nullptr);
+            std::strftime(message.time, sizeof(message.time), "%D %T",
+                          std::localtime(&result));
             local->sendTo(message);
         }
     }
@@ -55,8 +58,9 @@ void client::receiveAndShowMessage(Socket *socket)
          */
         message.username[15]= '\0';
         message.text[1023] = '\0';
-        std::cout << message.username << " sent: '" << message.text << "'"
-                  << std::endl;
+        message.time[25] = '\0';
+        std::cout << message.time << " " << message.username << " sent: '"
+                  << message.text << "'" << std::endl;
     }
 
 }

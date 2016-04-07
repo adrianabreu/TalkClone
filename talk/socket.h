@@ -17,7 +17,7 @@
 struct Message {
     char username[16];
     char text[1024];
-
+    char time[26]; //Www Mmm dd hh:mm:ss yyyy
 };
 
 //Helper function for building sockaddr_in struct

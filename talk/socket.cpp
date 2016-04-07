@@ -1,5 +1,6 @@
 #include "socket.h"
 #include "helpsignalsthreads.h"
+#include <ctime>
 
 sockaddr_in makeIpAddress(const std::string& ip_address, int port){
     sockaddr_in tmp{};
