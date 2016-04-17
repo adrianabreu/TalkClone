@@ -31,6 +31,16 @@ void displayHelp()
               << "-u --user USER: select sender name" << std::endl;
 }
 
+bool validPort(int port)
+{
+    return (port > 0 && port < 65536) ? true : false;
+}
+
+bool validIP()
+{
+
+}
+
 void parseArguments(bool help_option,bool server_option,std::string port_option,
                     std::string client_option, std::string userOption, int *aux)
 {
@@ -41,8 +51,11 @@ void parseArguments(bool help_option,bool server_option,std::string port_option,
     if (help_option)
         displayHelp();
 
-    if (!port_option.empty())
+    if (!port_option.empty()) {
         port = stoi(port_option);
+        (!validPort(port)) ? *aux = ERR_PARSING : *aux = SUCCESS;
+        std::cout << "Port must be an integer between 1 and 65536" << std::endl;
+    }
 
     if (!userOption.empty()) {
         userName = userOption;
@@ -57,21 +70,22 @@ void parseArguments(bool help_option,bool server_option,std::string port_option,
     }
 
     handleSignals();
-
-    if (server_option) {
-        TCPServer local = server::setupServer("0.0.0.0",port,*&aux);
-        if(*aux == SUCCESS)
-            server::startServer(&local, userName);
-    } else if (client_option != "") {
-        //Server are also clients so servers have priority
-        if (port != 0) {
-            Socket local = client::setupSocket("0.0.0.0",client_option,port,
-                                               &*aux);
+    if (*aux == SUCCESS) {
+        if (server_option) {
+            TCPServer local = server::setupServer("0.0.0.0",port,*&aux);
             if(*aux == SUCCESS)
-                client::startClient(&local, userName);
-        } else {
-            std::cout << "Please, specify the remote port to connect to"
-                      << std::endl;
+                server::startServer(&local, userName);
+        } else if (client_option != "") {
+            //Server are also clients so servers have priority
+            if (port != 0) {
+                Socket local = client::setupSocket("0.0.0.0",client_option,port,
+                                                   &*aux);
+                if(*aux == SUCCESS)
+                    client::startClient(&local, userName);
+            } else {
+                std::cout << "Please, specify the remote port to connect to"
+                          << std::endl;
+            }
         }
     }
 }
