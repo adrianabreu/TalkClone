@@ -41,6 +41,9 @@ void server::startServer(TCPServer *local,const std::string& userName)
         << std::endl;
     }
 
+    //History
+    std::thread createHistory(&queueThread, std::ref(userName));
+
     //We will launch a thread for listen for connections
     std::thread listener(&server::listenThread, std::ref(local));
 
@@ -62,6 +65,7 @@ void server::startServer(TCPServer *local,const std::string& userName)
     //We must close all the sockets and finish all the threads
     requestCancellation(listener);
     requestCancellation(sender);
+    requestCancellation(createHistory);
     server::clearListThreads();
 }
 
@@ -86,6 +90,13 @@ void server::getandSendMessage(std::atomic<bool>& endOfLoop,
             std::time_t result = std::time(nullptr);
             std::strftime(message.time, sizeof(message.time), "%D %T",
                           std::localtime(&result));
+
+            //add to history
+            std::unique_lock<std::mutex> lockSignal(mutexSignal);
+            historyQueue.push(message);
+            lockSignal.unlock();
+            conditionSignal.notify_one();
+
             std::unique_lock<std::mutex> lock(hashSocketsMutex);
             server::sendAll(message,std::this_thread::get_id());
             lock.unlock();
@@ -168,6 +179,13 @@ void server::receiveAndShowMessage()
             message.username[15]= '\0';
             message.text[1023] = '\0';
             message.time[25] = '\0';
+
+            //add to history
+            std::unique_lock<std::mutex> lockSignal(mutexSignal);
+            historyQueue.push(message);
+            lockSignal.unlock();
+            conditionSignal.notify_one();
+
             std::unique_lock<std::mutex> lock(hashSocketsMutex);
             std::cout << message.time << " " << message.username << " sent: '"
                       << message.text << "'" << std::endl;

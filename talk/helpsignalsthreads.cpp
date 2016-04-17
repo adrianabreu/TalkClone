@@ -41,4 +41,26 @@ void requestCancellation(std::thread& oneThread)
     oneThread.join();
 }
 
+/*===============================================================
+ * History Thread
+ *===============================================================
+ */
 
+void queueThread(const std::string& username)
+{
+    try {
+        History localHistory(username);
+        while(true) {
+            std::unique_lock<std::mutex> lock(mutexSignal);
+            while(historyQueue.empty())
+                conditionSignal.wait(lock);
+            auto messageAux = historyQueue.front();
+            historyQueue.pop();
+            lock.unlock();
+            localHistory.addToHistory(messageAux);
+        }
+    } catch(std::system_error& e) {
+        std::cerr << "program_invocation_name" << e.what() << std::endl;
+        endOfLoop = true;
+    }
+}

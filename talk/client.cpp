@@ -2,6 +2,8 @@
 #include "helpsignalsthreads.h"
 #define ERR_SOCKET 3
 
+
+
 /*===================================================
  * Thread's domain
  * ==================================================
@@ -27,6 +29,12 @@ void client::getandSendMessage(Socket *local,std::atomic<bool>& endOfLoop,
             std::strftime(message.time, sizeof(message.time), "%D %T",
                           std::localtime(&result));
             local->sendTo(message);
+
+            //add to history
+            std::unique_lock<std::mutex> lockSignal(mutexSignal);
+            historyQueue.push(message);
+            lockSignal.unlock();
+            conditionSignal.notify_one();
         }
     }
 
@@ -51,6 +59,12 @@ void client::receiveAndShowMessage(Socket *socket)
     Message message;
     while(1) {
         socket->receiveFrom(message);
+
+        //add to history
+        std::unique_lock<std::mutex> lockSignal(mutexSignal);
+        historyQueue.push(message);
+        lockSignal.unlock();
+        conditionSignal.notify_one();
 
         /* In order to increase the security we add a \0 to limit
          * the lecture to the size of the buffer, maybe the message
@@ -116,6 +130,8 @@ void client::startClient(Socket *local,const std::string& userName)
         << std::endl;
     }
 
+    std::thread createHistory(&queueThread, std::ref(userName));
+
     std::thread sender(&sendThread,std::ref(*local),
                       std::ref(endOfLoop),std::ref(userName));
 
@@ -135,4 +151,5 @@ void client::startClient(Socket *local,const std::string& userName)
     //We must finish both threads gracefully!
     requestCancellation(sender);
     requestCancellation(receiver);
+    requestCancellation(createHistory);
 }
