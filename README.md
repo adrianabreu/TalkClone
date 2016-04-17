@@ -16,7 +16,9 @@
    make
    ``` 
 
-## What's new on Talk 1.0? :
+## What's new on Talk 1.2? :
+
+Most people found terminal uncorfortable, so in Talk 1.2 you can use a GUI for interact with others!
 
 * The whole code have been redistributed.
 * A server mode have been implemented.
@@ -90,3 +92,14 @@ No, I'm following whatsapp babysteps.
 ### History
 The messages are saved on files. The history size will be as much 1MB. (It works as a circular buffer). 
 You can found your histories on **~/.talk/username.log**
+
+### How is the GUI?
+Here are a few screenshots, hope you like them:
+![Main window](assets/talk-ing.png?raw=true "Main window")
+
+![Setup dialog](assets/setupdialog.png?raw=true "Setup dialog")
+
+![About dialog](assets/aboutdialog.png?raw=true "About dialog")
+
+### Do I HAVE TO use the GUI?
+No, I know that there are terminal lovers out there (as the truth), you can keep using talk as always ;)
