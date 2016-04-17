@@ -24,6 +24,7 @@
 * Support to terminal arguments.
 * Usernames allowed.
 * Signal handling.
+* Messages are saved on a history.
 
 ## Arguments for launching :
 
@@ -59,6 +60,7 @@ If you want to test it locally just follow this steps:
 5. You can host your own server, and all the users connected to you will see all the messages.
 6. Usernames are allowed!
 7. Also supports system's signals (sigterm, sighup...).
+8. History implemented under ~/.talk !
 
 ## Usage:
 
@@ -84,3 +86,7 @@ Feel free to check it on **-h --help**
 
 ### Are messages encrypted?:
 No, I'm following whatsapp babysteps.
+
+### History
+The messages are saved on files. The history size will be as much 1MB. (It works as a circular buffer). 
+You can found your histories on **~/.talk/username.log**
