@@ -3,6 +3,10 @@
 #include "socket.h"
 #include "helpsignalsthreads.h"
 
+extern std::queue<Message> historyQueue;
+extern std::mutex mutexSignal;
+extern std::condition_variable conditionSignal;
+
 /*
  * These are helper functions for the client setup
  * and threads launched

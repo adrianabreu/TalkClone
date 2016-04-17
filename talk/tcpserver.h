@@ -12,6 +12,11 @@
 extern std::list<std::thread> listThreads; //Threads created for listen to clients
 extern std::mutex listThreadsMutex;
 
+//History
+extern std::queue<Message> historyQueue;
+extern std::mutex mutexSignal;
+extern std::condition_variable conditionSignal;
+
 /*
  * This class does the basic server stuff,
  * listen on a single port, and handle new connections

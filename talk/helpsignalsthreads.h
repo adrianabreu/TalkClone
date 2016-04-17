@@ -6,11 +6,18 @@
 #include <csignal>
 #include <atomic>
 #include <system_error>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
 
 #define SUCCESS 0
 #define ERR_SOCKET 3
 
 extern std::atomic<bool> endOfLoop;
+
+extern std::queue<Message> historyQueue;
+extern std::mutex mutexSignal;
+extern std::condition_variable conditionSignal;
 
 /*
  * These are helping functions common to both
@@ -23,5 +30,7 @@ void setSigMask(int sigAction);
 
 //This function will shutdown the threads
 void requestCancellation(std::thread& oneThread);
+
+void queueThread(std::string& username);
 
 #endif // HELPSIGNALSTHREADS_H

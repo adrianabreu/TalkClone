@@ -3,11 +3,16 @@
 #include "client.h"
 #include "server.h"
 #include "helpsignalsthreads.h"
+#include "history.h"
 
 #include <getopt.h>
 #include <cstdlib>
 
 std::atomic<bool> endOfLoop(false);
+
+std::queue<Message> historyQueue;
+std::mutex mutexSignal;
+std::condition_variable conditionSignal;
 
 void handleSignals()
 {

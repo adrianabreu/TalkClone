@@ -9,11 +9,13 @@ SOURCES += main.cpp \
     tcpserver.cpp \
     client.cpp \
     server.cpp \
-    helpsignalsthreads.cpp
+    helpsignalsthreads.cpp \
+    history.cpp
 
 HEADERS += \
     socket.h \
     tcpserver.h \
     client.h \
     server.h \
-    helpsignalsthreads.h
+    helpsignalsthreads.h \
+    history.h
