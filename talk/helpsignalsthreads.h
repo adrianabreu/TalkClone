@@ -10,6 +10,9 @@
 #include <condition_variable>
 #include <queue>
 
+#include "socket.h"
+#include "history.h"
+
 #define SUCCESS 0
 #define ERR_SOCKET 3
 
@@ -31,6 +34,6 @@ void setSigMask(int sigAction);
 //This function will shutdown the threads
 void requestCancellation(std::thread& oneThread);
 
-void queueThread(std::string& username);
+void queueThread(const std::string& username);
 
 #endif // HELPSIGNALSTHREADS_H

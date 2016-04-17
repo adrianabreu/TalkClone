@@ -46,7 +46,7 @@ void requestCancellation(std::thread& oneThread)
  *===============================================================
  */
 
-void queueThread(std::string& username)
+void queueThread(const std::string& username)
 {
     History localHistory(username);
     while(true) {
