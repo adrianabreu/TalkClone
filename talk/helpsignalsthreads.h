@@ -14,6 +14,7 @@
 #include "history.h"
 
 #define SUCCESS 0
+#define ERR_PARSING 2
 #define ERR_SOCKET 3
 
 extern std::atomic<bool> endOfLoop;

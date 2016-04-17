@@ -36,9 +36,13 @@ bool validPort(int port)
     return (port > 0 && port < 65536) ? true : false;
 }
 
-bool validIP()
+bool validIP(std::string& ipAddress)
 {
+    struct sockaddr_in sa;
 
+    int result = inet_pton(AF_INET, ipAddress.c_str(), &(sa.sin_addr));
+    //pton returns 0 if ip isn't valid
+    return (result != 0) ? true : false;
 }
 
 void parseArguments(bool help_option,bool server_option,std::string port_option,
@@ -53,8 +57,11 @@ void parseArguments(bool help_option,bool server_option,std::string port_option,
 
     if (!port_option.empty()) {
         port = stoi(port_option);
-        (!validPort(port)) ? *aux = ERR_PARSING : *aux = SUCCESS;
-        std::cout << "Port must be an integer between 1 and 65536" << std::endl;
+        if (!validPort(port)) {
+            *aux = ERR_PARSING;
+             std::cout << "Port must be an integer between 1 and 65536"
+                       << std::endl;
+        }
     }
 
     if (!userOption.empty()) {
@@ -75,16 +82,15 @@ void parseArguments(bool help_option,bool server_option,std::string port_option,
             TCPServer local = server::setupServer("0.0.0.0",port,*&aux);
             if(*aux == SUCCESS)
                 server::startServer(&local, userName);
-        } else if (client_option != "") {
-            //Server are also clients so servers have priority
-            if (port != 0) {
+        } else {
+            if (validIP(client_option)) {
+                //Server are also clients so servers have priority
                 Socket local = client::setupSocket("0.0.0.0",client_option,port,
-                                                   &*aux);
+                                                       &*aux);
                 if(*aux == SUCCESS)
-                    client::startClient(&local, userName);
+                     client::startClient(&local, userName);
             } else {
-                std::cout << "Please, specify the remote port to connect to"
-                          << std::endl;
+                std::cout << "Please, insert a valid ip address" << std::endl;
             }
         }
     }
