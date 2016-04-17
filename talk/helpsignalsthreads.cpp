@@ -60,7 +60,7 @@ void queueThread(const std::string& username)
             localHistory.addToHistory(messageAux);
         }
     } catch(std::system_error& e) {
-        std::cerr << "program_invocation_name" << e.what() << std::end;
+        std::cerr << "program_invocation_name" << e.what() << std::endl;
         endOfLoop = true;
     }
 }
